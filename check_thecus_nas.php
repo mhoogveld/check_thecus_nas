@@ -754,24 +754,6 @@ class ThecusChecker
         echo '  php ' . $baseFilename . ' --hostname=thecus.example.com --username=admin --password=password' . PHP_EOL;
         echo '  php ' . $baseFilename . ' -H thecus.example.com -u admin -p password --disk-temp-warning 60 --disk-temp-warning 70' . PHP_EOL;
         echo PHP_EOL;
-        echo 'Nagios configuration examples:' . PHP_EOL;
-        echo '  command {' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '  }' . PHP_EOL;
-        echo '  service {' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '  }' . PHP_EOL;
-        echo '  command {' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '      asd  asd' . PHP_EOL;
-        echo '  }' . PHP_EOL;
-        echo '  php ' . $baseFilename . ' -H thecus.example.com -u admin -p password --disk-temp-warning 60 --disk-temp-warning 70' . PHP_EOL;
-        echo PHP_EOL;
     }
 
     /**

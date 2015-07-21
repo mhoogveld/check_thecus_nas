@@ -21,7 +21,7 @@ and failures.
 Requirements:
 * PHP version 5.3 (earlier versions are untested)
 * php5_curl
-    For Debian based systems (e.g. Ubuntu): <code>sudo apt-get install php5-curl</code>
+    For Debian based systems (e.g. Ubuntu): `sudo apt-get install php5-curl`
 
 Place the check script anywhere you'd like (eg /usr/local/lib/nagios/plugins) and run it
 
@@ -34,23 +34,23 @@ will not suffer from this issue.
 
 General use cases:
 Check the health of a device using a config file 
-<code>
+```
 check_thecus_nas.php --hostname nas01.example.com --config-file nas01.conf --type health
-</code>
+```
 
 Check the cpu usage of a device specifying the username/password on the commandline (insecure, read above)
-<code>
+```
 check_thecus_nas.php -h nas01.example.com -u admin -p password -t cpu --cpu-warning 80 --cpu-critical 90
-</code>
+```
 
 Check the available disk space of a device
-<code>
+```
 check_thecus_nas.php -h nas01.example.com -c nas01.conf -t disk-usage --disk-usage-warning 80 --disk-usage-critical 90
-</code>
+```
 
 ## Nagios configuration examples
 Command definition examples:
-<code>
+```
 define command {
     command_name                    check_thecus_nas_health
     command_line                    $USER2$/check_thecus_nas.php --hostname "$HOSTADDRESS$" --config-file "$ARG1$" --type health
@@ -71,10 +71,10 @@ define command {
     ;command_example                !/path/to/thecus_nas.conf
     ;$ARG1$                         confing file location
 }
-</code>
+```
 
 Service template examples:
-<code>
+```
 define service {
     name                            Thecus-nas-health
     service_description             Thecus NAS - Health
@@ -107,10 +107,10 @@ define service {
     retry_check_interval            5
     register                        0
 }
-</code>
+```
 
 Service definition examples:
-<code>
+```
 define service {
     host_name                       nas02.example.com
     use                             Thecus-nas-health
@@ -128,6 +128,6 @@ define service {
     use                             Thecus-nas-diskusage
     check_command                   check_thecus_nas_diskusage!/path/to/nas02.conf
 }
-</code>
+```
 
 

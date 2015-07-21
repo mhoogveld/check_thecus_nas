@@ -33,21 +33,26 @@ all running processes with arguments (which would include the password.) By usin
 will not suffer from this issue.
 
 General use cases:
+Get full usage information  
+```
+./check_thecus_nas.php --help
+```
+
 Check the health of a device using a config file 
 ```
-check_thecus_nas.php --hostname nas01.example.com --config-file nas01.conf \
+./check_thecus_nas.php --hostname nas01.example.com --config-file nas01.conf \
     --type health
 ```
 
 Check the cpu usage of a device specifying the username/password on the commandline (insecure, read above)
 ```
-check_thecus_nas.php -h nas01.example.com -u admin -p password -t cpu \
+./check_thecus_nas.php -h nas01.example.com -u admin -p password -t cpu \
     --cpu-warning 80 --cpu-critical 90
 ```
 
 Check the available disk space of a device
 ```
-check_thecus_nas.php -h nas01.example.com -c nas01.conf -t disk-usage \
+./check_thecus_nas.php -h nas01.example.com -c nas01.conf -t disk-usage \
     --disk-usage-warning 80 --disk-usage-critical 90
 ```
 

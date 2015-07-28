@@ -1,5 +1,5 @@
 # check_thecus_nas
-Nagios check plugin for Thecus NAS devices
+Monitoring plugin for Thecus NAS devices
 
 ## Overview
 This plugin can check the health and status of a Thecus NAS device. It has been developed and tested 

@@ -76,6 +76,9 @@ class ThecusChecker
     const DEFAULT_UPTIME_WARN = 1200;
     const DEFAULT_UPTIME_CRIT = 300;
 
+    /** @var bool */
+    protected $debug = false;
+
     /** @var string */
     protected $hostname;
 
@@ -628,13 +631,18 @@ class ThecusChecker
      */
     public function parseOpts()
     {
+        if ($this->debug) {
+            print("Entering parseOpts()" . PHP_EOL);
+        }
+
         $baseFilename = basename(__FILE__);
 
-        $shortOpts = 'hvH:u:p:t:c:';
+        $shortOpts = 'hvdH:u:p:t:c:';
         $longOpts = array(
             'help',
             'verbose',
             'version',
+            'debug',
             'config-file:',
             'hostname:',
             'username:',
@@ -659,13 +667,17 @@ class ThecusChecker
 
         if (isset($opts['version'])) {
             echo $baseFilename . ' version ' . self::VERSION . PHP_EOL;
-            echo 'Copyright (C) 2015 Maarten Hoogveld.' . PHP_EOL;
+            echo 'Copyright (C) 2017 Maarten Hoogveld.' . PHP_EOL;
             echo 'License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.' . PHP_EOL;
             echo 'This is free software: you are free to change and redistribute it.' . PHP_EOL;
             echo 'There is NO WARRANTY, to the extent permitted by law.' . PHP_EOL;
             echo PHP_EOL;
             echo 'Written by Maarten Hoogveld.' . PHP_EOL;
             exit(0);
+        }
+
+        if (isset($opts['d']) || isset($opts['debug'])) {
+            $this->debug = true;
         }
 
         if (isset($opts['c'])) {
@@ -750,6 +762,10 @@ class ThecusChecker
      */
     protected function checkOpts()
     {
+        if ($this->debug) {
+            print("Entering checkOpts()" . PHP_EOL);
+        }
+
         if (empty($this->hostname)) {
             throw new ThecusException('Hostname missing. Use --help for usage information.');
         } else if (empty($this->username)) {
@@ -814,6 +830,10 @@ class ThecusChecker
      */
     protected function checkHealth()
     {
+        if ($this->debug) {
+            print("Entering checkHealth()" . PHP_EOL);
+        }
+
         $this->checkSystemHealth();
         $this->checkRaidHealth();
         $this->checkDiskHealth();
@@ -830,27 +850,35 @@ class ThecusChecker
      */
     protected function checkSystemHealth()
     {
-        $statusCode = self::STATUS_OK;
-        $statusTexts = array();
+        if ($this->debug) {
+            print("Entering checkSystemHealth()" . PHP_EOL);
+        }
+
+        $this->addStatusInfo(self::STATUS_OK);
+
+        $sysHealth = $this->getNasStatus();
+
+        if (isset($sysHealth->fan) && 'on' != $sysHealth->fan) {
+            $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan not OK');
+        }
+        if (isset($sysHealth->raid) && 'on' != $sysHealth->raid) {
+            $this->addStatusInfo(self::STATUS_CRITICAL, 'Raid not OK');
+        }
+        if (isset($sysHealth->disk) && 'on' != $sysHealth->disk) {
+            $this->addStatusInfo(self::STATUS_CRITICAL, 'Disk not OK');
+        }
 
         $sysInfo = $this->getSysStatus();
 
-        if ('OK' != $sysInfo->cpu_fan) {
-            $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'CPU fan not OK';
+        if (isset($sysInfo->cpu_fan) && 'OK' != $sysInfo->cpu_fan) {
+            $this->addStatusInfo(self::STATUS_CRITICAL, 'CPU fan not OK');
         }
 
-        if (isset($sysInfo->sys_fan_speed) && 'OK' != $sysInfo->sys_fan_speed) {
-            $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'System fan 1 not OK';
-        }
-
-        $fanNr = 2;
+        $fanNr = 1;
         $fanName = 'sys_fan_speed' . $fanNr;
         while (isset($sysInfo->$fanName)) {
             if ('OK' != $sysInfo->$fanName) {
-                $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-                $statusTexts[] = 'System fan ' . $fanNr . ' not OK';
+                $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan ' . $fanNr . ' not OK');
             }
 
             // Set next fan name
@@ -858,61 +886,30 @@ class ThecusChecker
             $fanName = 'sys_fan_speed' . $fanNr;
         }
 
-        if (self::STATUS_OK == $statusCode) {
-            $statusTexts[] = 'Hardware working fine';
+        // If status is still ok, add a text message
+        if (self::STATUS_OK == $this->getStatusCode()) {
+            $this->addStatusInfo(self::STATUS_OK, 'Hardware working fine');
         }
 
-        if (empty($statusTexts)) {
-            $statusText = null;
-        } else {
-            $statusText = implode(', ', $statusTexts);
+        // Add various performance data if available on this model
+        if (isset($sysInfo->series) && is_array($sysInfo->series)) {
+            if (isset($sysInfo->serie->HDD_FAN1)) {
+                $hddFanRpm = $sysInfo->serie->HDD_FAN1;
+                $this->addStatusInfo(self::STATUS_OK, "HDD fan: " . $hddFanRpm . "rpm", "hddFanRpm=" . $hddFanRpm);
+            }
+            if (isset($sysInfo->serie->CPU_TEMP)) {
+                $cpuTemp = $sysInfo->serie->CPU_TEMP;
+                $this->addStatusInfo(self::STATUS_OK, "CPU temp: " . $cpuTemp . "°C", "CPU_temp=" . $cpuTemp);
+            }
+            if (isset($sysInfo->serie->SAS_TEMP)) {
+                $sasTemp = $sysInfo->serie->SAS_TEMP;
+                $this->addStatusInfo(self::STATUS_OK, "SAS temp: " . $sasTemp . "°C", "SAS_temp=" . $sasTemp);
+            }
+            if (isset($sysInfo->serie->SYS_TEMP)) {
+                $sysTemp = $sysInfo->serie->SYS_TEMP;
+                $this->addStatusInfo(self::STATUS_OK, "Sys temp: " . $sysTemp . "°C", "Sys_temp=" . $sysTemp);
+            }
         }
-        $this->addStatusInfo($statusCode, $statusText);
-    }
-
-    /**
-     * Check the health of the hardware, which includes the CPU fan and system fans
-     */
-    protected function new_checkSystemHealth()
-    {
-        $statusCode = self::STATUS_OK;
-        $statusTexts = array();
-
-        $sysInfo = $this->getSysStatus();
-		$sysHealth = $this->getNasStatus();
-
-        $sysArray = $sysInfo->series;
-
-
-        if ($sysHealth->fan != 'on') {
-            $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'System fan not OK';
-        } else if ($sysHealth->raid != 'on') {
-			$statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'Raid not OK';
-		} else if ($sysHealth->disk != 'on') {
-			$statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'Disk not OK';
-		}
-
-        $fanRPM = $sysArray->HDD_FAN1;
-        $cpu_temp = $sysArray->CPU_TEMP;
-        $systemp1 = $sysArray->SAS_TEMP;
-        $systemp2 = $sysArray->SYS_TEMP;
-
-        if (self::STATUS_OK == $statusCode) {
-            $statusTexts[] = 'Hardware OK, Fan: ' . $fanRPM . 'rpm, CPU Temp: ' . $cpu_temp . '°C, System Temperature: ' . $systemp1 . '°C, ' . $systemp2 . '°C';
-        }
-
-        if (empty($statusTexts)) {
-            $statusText = null;
-        } else {
-            $statusText = implode(', ', $statusTexts);
-        }
-        $this->addStatusInfo($statusCode, $statusText);
-
-
-
     }
 
     /**
@@ -921,6 +918,10 @@ class ThecusChecker
      */
     protected function checkRaidHealth()
     {
+        if ($this->debug) {
+            print("Entering checkRaidHealth()" . PHP_EOL);
+        }
+
         $statusTexts = array();
 
         // Check RAID access status
@@ -975,62 +976,65 @@ class ThecusChecker
      */
     protected function checkDiskHealth()
     {
+        if ($this->debug) {
+            print("Entering checkDiskHealth()" . PHP_EOL);
+        }
+
         $diskInfo = $this->getDiskInfo();
 
-        foreach ($diskInfo->disk_data as $disk) {
-            if ('N/A' == $disk->s_status) {
-                continue;
-            } else if ('Critical' == $disk->s_status) {
-                $statusText = 'Disk ' . $disk->trayno . ' status: ' . $disk->s_status;
-                $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
-            } else if ('Warning' == $disk->s_status) {
-                $smartInfo = $this->checkSmartInfo($disk->diskno, $disk->trayno);
-                $smartInfo['statusCode'] = max(self::STATUS_WARNING, $smartInfo['statusCode']);
-                $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
-            } else {
-                // The cases 'OK' and 'Detected' (and possibly more?)
-                $smartInfo = $this->checkSmartInfo($disk->diskno, $disk->trayno);
-                $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+        $diskData = $diskInfo->disk_data;
+
+        // Fill the disklist array with all disks found in a one or two dimensional array
+        $diskList = array();
+        if (isset($diskData->disks) && is_array($diskData->disks)) {
+            foreach ($diskInfo->disk_data as $diskArrayElement) {
+                foreach ($diskArrayElement->disks as $disk) {
+                    if (!isset($diskList[$disk->tray_no])) {
+                        $diskList[$disk->tray_no] = array();
+                    }
+                    $diskList[$disk->tray_no][$disk->disk_no] = $disk;
+                }
+            }
+        } else {
+            foreach ($diskInfo->disk_data as $disk) {
+                if (!isset($diskList[$disk->trayno])) {
+                    $diskList[$disk->trayno] = array();
+                }
+                $diskList[$disk->trayno][$disk->diskno] = $disk;
             }
         }
-    }
 
-    /**
-     * Checks the status of the physical disks, including bad sectors and disk temperature
-     */
-    protected function new_checkDiskHealth()
-    {
+        // Check each disk in the disk list array
+        foreach ($diskList as $trayNr => $trayData) {
+            foreach ($trayData as $diskNr => $disk) {
+                // Find the disk status
+                if (isset($disk->s_status)) {
+                    $diskStatus = $disk->s_status;
+                } else if (isset($disk->status->state)) {
+                    $diskStatus = $disk->status->state;
+                } else {
+                    $diskStatus = 'Unknown';
+                }
 
-		$diskInfo = $this->getDiskInfo();
-        $diskArray = $diskInfo->disk_data;
-
-		foreach ($diskArray as $diskArrayElement)
-		{
-
-			foreach($diskArrayElement->disks as $disk)
-			{
-
-			/*
-			if ('N/A' == $disk->status->state) {
-                continue;
-            } else
-			*/
-
-			if ('2' == $disk->status->state) {
-                $statusText = 'Disk ' . $disk->tray_no . ' status: ' . $disk->status->state;
-                $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
-            } else if ('1' == $disk->status->state) {
-                $smartInfo = $this->checkSmartInfo($disk->disk_no, $disk->tray_no);
-                $smartInfo['statusCode'] = max(self::STATUS_WARNING, $smartInfo['statusCode']);
-                $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
-            } else {
-                // The cases 'OK' and 'Detected' (and possibly more?)
-                $smartInfo = $this->checkSmartInfo($disk->disk_no, $disk->tray_no);
-                $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+                if ('N/A' == $diskStatus) {
+                    continue;
+                } else if (('Critical' == $diskStatus) || ('2' == $diskStatus)) {
+                    $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->trayno . ': ' . $disk->s_status;
+                    $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
+                } else if (('Warning' == $diskStatus) || ('1' == $diskStatus)) {
+                    $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
+                    $this->addStatusInfo(
+                        max(self::STATUS_WARNING, $smartInfo['statusCode']),
+                        $smartInfo['statusText'],
+                        $smartInfo['perfData']
+                    );
+                } else {
+                    // The cases 'OK', 'Detected', '0' (and possibly more?)
+                    $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
+                    $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+                }
             }
-
-			}
-		}
+        }
     }
 
     /**
@@ -1038,15 +1042,26 @@ class ThecusChecker
      */
     protected function checkCpuUsage()
     {
+        if ($this->debug) {
+            print("Entering checkCpuUsage()" . PHP_EOL);
+        }
+
         $crit = $this->getCpuUsageThreshold(self::STATUS_CRITICAL);
         $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
 
         $sysInfo = $this->getSysStatus();
-        $cpuUsage = intval($sysInfo->cpu_loading);
+        if (isset($sysInfo->cpu_loading)) {
+            $cpuUsage = intval($sysInfo->cpu_loading);
+        } else if (isset($sysInfo->series->CPU)) {
+            $cpuUsage = $sysInfo->series->CPU;
+        } else {
+            $this->addStatusInfo(self::STATUS_UNKNOWN, 'Cpu usage unknown');
+            return;
+        }
 
-        if (null !== $crit && $cpuUsage >= $crit) {
+        if ((null !== $crit) && ($cpuUsage >= $crit)) {
             $statusCode = self::STATUS_CRITICAL;
-        } else if (null !== $warn && $cpuUsage >= $warn) {
+        } else if ((null !== $warn) && ($cpuUsage >= $warn)) {
             $statusCode = self::STATUS_WARNING;
         } else {
             $statusCode = self::STATUS_OK;
@@ -1057,53 +1072,34 @@ class ThecusChecker
 
         $this->addStatusInfo($statusCode, $statusText, $perfData);
     }
-
-    /**
-     * Checks the CPU usage
-     */
-    protected function new_checkCpuUsage()
-    {
-        $crit = $this->getCpuUsageThreshold(self::STATUS_CRITICAL);
-        $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
-
-        $sysInfo = $this->getSysStatus();
-        $sysArray = $sysInfo->series;
-        $cpuUsage = $sysArray->CPU;
-
-        if (null !== $crit && $cpuUsage >= $crit) {
-            $statusCode = self::STATUS_CRITICAL;
-        } else if (null !== $warn && $cpuUsage >= $warn) {
-            $statusCode = self::STATUS_WARNING;
-        } else {
-            $statusCode = self::STATUS_OK;
-        }
-
-        $statusText = 'CPU usage: ' . $cpuUsage . '%';
-        $perfData = 'CPU=' . $cpuUsage . ';' . $warn . ';' . $crit . ';0;100';
-
-        $this->addStatusInfo($statusCode, $statusText, $perfData);
-    }
-
 
 	protected function checkMemoryUsage()
     {
+        if ($this->debug) {
+            print("Entering checkMemoryUsage()" . PHP_EOL);
+        }
+
         $crit = $this->getMemoryUsageThreshold(self::STATUS_CRITICAL);
         $warn = $this->getMemoryUsageThreshold(self::STATUS_WARNING);
 
         $sysInfo = $this->getSysStatus();
-        $sysArray = $sysInfo->series;
-        $memUsage = $sysArray->Memory;
+        if (isset($sysInfo->series->Memory)) {
+            $memUsage = $sysInfo->series->Memory;
+        } else {
+            $this->addStatusInfo(self::STATUS_UNKNOWN, 'Memory usage unknown');
+            return;
+        }
 
-        if (null !== $crit && $memUsage >= $crit) {
+        if ((null !== $crit) && ($memUsage >= $crit)) {
             $statusCode = self::STATUS_CRITICAL;
-        } else if (null !== $warn && $memUsage >= $warn) {
+        } else if ((null !== $warn) && ($memUsage >= $warn)) {
             $statusCode = self::STATUS_WARNING;
         } else {
             $statusCode = self::STATUS_OK;
         }
 
-        $statusText = 'RAM usage: ' . $memUsage . '%';
-        $perfData = 'RAM=' . $memUsage . ';' . $warn . ';' . $crit . ';0;100';
+        $statusText = 'Memory usage: ' . $memUsage . '%';
+        $perfData = 'mem_usage=' . $memUsage . '%;' . $warn . ';' . $crit . ';0;100';
 
         $this->addStatusInfo($statusCode, $statusText, $perfData);
     }
@@ -1113,6 +1109,10 @@ class ThecusChecker
      */
     protected function checkDiskUsage()
     {
+        if ($this->debug) {
+            print("Entering checkDiskUsage()" . PHP_EOL);
+        }
+
         $usageRegExp = '/([0-9.]+) ?([KMGTP]B)[^0-9.]+([0-9.]+) ?([KMGTP]B)/';
 
         $statusCode = self::STATUS_OK;
@@ -1178,6 +1178,10 @@ class ThecusChecker
      */
     protected function checkUptime()
     {
+        if ($this->debug) {
+            print("Entering checkUptime()" . PHP_EOL);
+        }
+
         throw new ThecusException('Needs to be implemented');
 
         $statusCode = self::STATUS_OK;
@@ -1208,19 +1212,23 @@ class ThecusChecker
     /**
      * Checks various SMART attibutes
      *
-     * @param string $diskNo  The disk number as returned by $this->getStatusText()
-     * @param string $trayNo  The tray number as returned by $this->getStatusText()
+     * @param string $diskNr  The disk number as returned by $this->getStatusText()
+     * @param string $trayNr  The tray number as returned by $this->getStatusText()
      * @return array Returns status info in an associative array with keys
      *               'statusCode', 'statusText' and 'perfData' which can be fed
      *               to $this->addStatusInfo()
      */
-    protected function checkSmartInfo($diskNo, $trayNo)
+    protected function checkSmartInfo($diskNr, $trayNr)
     {
+        if ($this->debug) {
+            print('Entering checkSmartInfo(' . $diskNr . ', ' . $trayNr . ')' . PHP_EOL);
+        }
+
         $statusCode = self::STATUS_OK;
         $statusTexts = array();
         $perfData = array();
 
-        $smartInfo = $this->getSmartInfo($diskNo, $trayNo);
+        $smartInfo = $this->getSmartInfo($diskNr, $trayNr);
         if (0 !== $smartInfo->smart_status) {
             $statusCode = self::STATUS_CRITICAL;
             $statusTexts[] = 'Status not OK';
@@ -1239,7 +1247,7 @@ class ThecusChecker
             }
         }
 
-        if (isset($smartInfo->ATTR197)) {
+        if (isset($smartInfo->ATTR194)) {
             $diskTemp = intval($smartInfo->ATTR194);
             $crit = $this->getDiskTempThreshold(self::STATUS_CRITICAL);
             $warn = $this->getDiskTempThreshold(self::STATUS_WARNING);
@@ -1250,7 +1258,7 @@ class ThecusChecker
                 $statusCode = max(self::STATUS_WARNING, $statusCode);
                 $statusTexts[] = 'Temp: ' . $diskTemp . '°C';
             }
-            $perfData[] = 'Disk' . $trayNo . '_temp=' . $diskTemp . ';' . $warn . ';' . $crit;
+            $perfData[] = 'Disk_' . $trayNr . '_' . $diskNr . '_temp=' . $diskTemp . ';' . $warn . ';' . $crit;
         }
 
         if (isset($smartInfo->ATTR197)) {
@@ -1269,7 +1277,7 @@ class ThecusChecker
         if (empty($statusTexts)) {
             $statusText = null;
         } else {
-            $statusText = 'Disk ' . $trayNo . ' (' . $smartInfo->model . ') ' . implode(', ', $statusTexts);
+            $statusText = 'Disk in tray ' . $trayNr . ' with nr ' . $diskNr . ' (' . $smartInfo->model . ') ' . implode(', ', $statusTexts);
         }
 
         if (empty($perfData)) {
@@ -1295,6 +1303,10 @@ class ThecusChecker
      */
     protected function getRaidList()
     {
+        if ($this->debug) {
+            print("Entering getRaidList()" . PHP_EOL);
+        }
+
         $uri = '/adm/getmain.php?fun=raid&action=getraidlist';
         $response = $this->jsonRequest($uri);
         return $response;
@@ -1308,6 +1320,10 @@ class ThecusChecker
      */
     protected function getRaidAccessStatus()
     {
+        if ($this->debug) {
+            print("Entering getRaidAccessStatus()" . PHP_EOL);
+        }
+
         $uri = '/adm/getmain.php?fun=raid&action=getAccessStatus';
         $response = $this->jsonRequest($uri);
         return $response;
@@ -1321,6 +1337,10 @@ class ThecusChecker
      */
     protected function getDiskInfo()
     {
+        if ($this->debug) {
+            print("Entering getDiskInfo()" . PHP_EOL);
+        }
+
         $uri = '/adm/getmain.php?fun=disks&update=1';
         $response = $this->jsonRequest($uri);
         return $response;
@@ -1336,6 +1356,10 @@ class ThecusChecker
      */
     protected function getSmartInfo($diskNo, $trayNo)
     {
+        if ($this->debug) {
+            print("Entering getSmartInfo()" . PHP_EOL);
+        }
+
         $uriList = array();
 
         $uri  = '/adm/getmain.php?fun=smart';
@@ -1348,8 +1372,17 @@ class ThecusChecker
         $uri .= '&trayno=' . $trayNo;
         $uriList[] = $uri;
 
-        $response = $this->jsonTryMultipleRequests($uriList);
-        return $response;
+        $responses = $this->jsonTryMultipleRequests($uriList, null, true, true);
+        // Sadly, both uri's could return json, but possibly without valid data
+        // Find a valid response
+        foreach ($responses as $response) {
+            if (isset($response->model) && ($response->model != 'N/A')) {
+                return $response;
+            }
+        }
+
+        // No valid response received
+        throw new ThecusException("No valid smart info response received.");
     }
 
     /**
@@ -1360,6 +1393,10 @@ class ThecusChecker
      */
     protected function getSysStatus()
     {
+        if ($this->debug) {
+            print("Entering getSysStatus()" . PHP_EOL);
+        }
+
         $uriList = array();
         $uriList[] = '/adm/getmain.php?fun=systatus&update=1';
         $uriList[] = '/adm/getmain.php?fun=monitor&action=update';
@@ -1377,6 +1414,10 @@ class ThecusChecker
      */
     protected function getNasStatus()
     {
+        if ($this->debug) {
+            print("Entering getNasStatus()" . PHP_EOL);
+        }
+
         $uri = '/adm/getmain.php?fun=nasstatus';
         $response = $this->jsonRequest($uri);
         return $response;
@@ -1391,6 +1432,10 @@ class ThecusChecker
      */
     protected function login()
     {
+        if ($this->debug) {
+            print("Entering login()" . PHP_EOL);
+        }
+
         $postInfo  = 'username=' . urlencode($this->getUsername());
         $postInfo .= '&pwd=' . urlencode($this->getPassword());
         $postInfo .= '&p_user=' . urlencode($this->getUsername());
@@ -1416,6 +1461,10 @@ class ThecusChecker
      */
     protected function logout()
     {
+        if ($this->debug) {
+            print("Entering logout()" . PHP_EOL);
+        }
+
         $uri = '/adm/logout.html';
         $response = $this->jsonRequest($uri);
         return $response;
@@ -1426,20 +1475,30 @@ class ThecusChecker
      * @param string|null $post  POST data as string if this is a POST-request, null for a GET-request.
      * @param bool $autoLogin  If set to true and the initial request was deemed unauthorized by the Thecus device,
      *                         a login attempt will be made after which the request it sent again.
-     * @return Object  The parsed json data
+     * @param bool $returnAllResponses  If set to true, all (valid) responses will be returned in an array
+     * @return Object|array  The parsed json data as object or array of objects
      * @throws ThecusException
      */
-    protected function jsonTryMultipleRequests($uriList, $post = null, $autoLogin = true)
+    protected function jsonTryMultipleRequests($uriList, $post = null, $autoLogin = true, $returnAllResponses = false)
     {
+        if ($this->debug) {
+            print("Entering jsonTryMultipleRequests()" . PHP_EOL);
+        }
+
         if (!is_array($uriList)) {
             return $this->jsonRequest($uriList, $post, $autoLogin);
         }
 
-        $response = null;
+        $responses = array();
 
         foreach ($uriList as $uri) {
             try {
                 $response = $this->jsonRequest($uri, $post, $autoLogin);
+                if ($returnAllResponses) {
+                    $responses[] = $response;
+                } else {
+                    return $response;
+                }
             } catch (ThecusClientErrorException $e) {
                 // Try next uri in case of eg 404
                 continue;
@@ -1454,12 +1513,12 @@ class ThecusChecker
             }
         }
 
-        if (null == $response) {
+        if (empty($response)) {
             // None of the uri's returned a valid response
             throw new ThecusException("Request not supported. No valid response received.");
         }
 
-        return $response;
+        return $responses;
     }
 
     /**
@@ -1475,6 +1534,10 @@ class ThecusChecker
      */
     protected function jsonRequest($uri, $post = null, $autoLogin = true)
     {
+        if ($this->debug) {
+            print("Entering jsonRequest()" . PHP_EOL);
+        }
+
         $url = 'http://' . $this->getHostname() . $uri;
 
         $ch = curl_init();
@@ -1490,18 +1553,31 @@ class ThecusChecker
             curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
         }
 
+        if ($this->debug) {
+            print("Request uri: " . $uri . PHP_EOL);
+        }
+
         try {
             $responseBody = curl_exec($ch);
             $this->checkError($ch, $responseBody);
         } catch (ThecusAuthorizationException $e) {
             if ($autoLogin) {
+                if ($this->debug) {
+                    print("Unautorized. Retrying after logging in." . PHP_EOL);
+                }
                 $this->login();
                 return $this->jsonRequest($uri, $post, false);
             } else {
+                if ($this->debug) {
+                    print("Unautorized." . PHP_EOL);
+                }
                 curl_close($ch);
                 throw $e;
             }
         } catch (ThecusException $e) {
+            if ($this->debug) {
+                print("Exception fetching data: " . $e->getMessage() . PHP_EOL);
+            }
             curl_close($ch);
             throw $e;
         }
@@ -1509,7 +1585,17 @@ class ThecusChecker
 
         $jsonObj = json_decode($responseBody);
         if (null == $jsonObj) {
+            if ($this->debug) {
+                print("No data returned" . PHP_EOL);
+            }
             throw new ThecusJsonDecodeException("Request not supported. No valid response received.");
+        }
+
+        // Print request and response for debugging
+        if ($this->debug) {
+            print("Response:" . PHP_EOL);
+            print_r(json_encode($jsonObj, JSON_PRETTY_PRINT));
+            print(PHP_EOL . PHP_EOL);
         }
 
         return $jsonObj;
@@ -1526,6 +1612,10 @@ class ThecusChecker
      */
     protected function checkError($ch, $responseBody)
     {
+        if ($this->debug) {
+            print("Entering checkError()" . PHP_EOL);
+        }
+
         if (curl_error($ch)) {
             throw new ThecusException(curl_error($ch));
         }

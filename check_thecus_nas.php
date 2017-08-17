@@ -1620,7 +1620,7 @@ class ThecusChecker
             throw new ThecusException(curl_error($ch));
         }
 
-        $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ("4" == substr($responseCode, 0, 1)) {
             // HTTP response in the 400 range (eg 404 - Not Found)
             throw new ThecusClientErrorException("Request not supported (http-response: " . $responseCode . ").");

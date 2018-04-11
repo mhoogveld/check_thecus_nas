@@ -1174,9 +1174,12 @@ class ThecusChecker
     protected function getSmartInfo($diskNo, $trayNo)
     {
         $uri  = '/adm/getmain.php?fun=smart';
-        if ($diskNo != "no_disk_no") {
-          // N2520 and N8800 do not allow setting the diskno attribute
-          $uri .= '&diskno=' . $diskNo;
+        if ($diskNo === "no_disk_no") {
+            // N2520 and N8800 need a translation of their disk no to char
+            $letter = chr($trayNo + 96);
+            $uri .= '&diskno=' . $letter;
+        } else {
+            $uri .= '&diskno=' . $diskNo;
         }
         $uri .= '&trayno=' . $trayNo;
         $response = $this->jsonRequest($uri);

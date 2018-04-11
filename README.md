@@ -7,6 +7,7 @@ against
 - Thecus N5500 running firmware V5.00.04
 - Thecus N5200XXX running firmware V5.03.02
 - Thecus N2520 running firmware OS6.build_341
+- Thecus N8800PROv2 running firmware V2.05.08.v2
 It can check and report CPU usage, system- and CPU-fans, RAID status, available disk space, disk health (bad-sectors) 
 and disk temperature.
 

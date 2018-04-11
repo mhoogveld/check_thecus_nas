@@ -895,10 +895,10 @@ class ThecusChecker
         $diskInfo = $this->getDiskInfo();
 
         foreach ($diskInfo->disk_data as $disk) {
-            if (isset($disk->product_name) && $disk->product_name === "N2520") {
-                // handle N2520 differently
+            if (isset($disk->product_name) && ($disk->product_name === "N2520" || $disk->product_name === "N8800PROv2")) {
+                // handle N2520 and N8800Pro differently
                 foreach ($disk->disks as $hdd) {
-                    $smartInfo = $this->checkSmartInfo("N2520", $hdd->tray_no);
+                    $smartInfo = $this->checkSmartInfo("no_disk_no", $hdd->tray_no);
                     $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
                 }
             } else {
@@ -1174,8 +1174,8 @@ class ThecusChecker
     protected function getSmartInfo($diskNo, $trayNo)
     {
         $uri  = '/adm/getmain.php?fun=smart';
-        if ($diskNo != "N2520") {
-          // N2520 does not allow setting the diskno attribute
+        if ($diskNo != "no_disk_no") {
+          // N2520 and N8800 do not allow setting the diskno attribute
           $uri .= '&diskno=' . $diskNo;
         }
         $uri .= '&trayno=' . $trayNo;

@@ -792,27 +792,30 @@ class ThecusChecker
 
         $sysInfo = $this->getSysStatus();
 
-        if ('OK' != $sysInfo->cpu_fan) {
-            $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'CPU fan not OK';
-        }
+        if (isset($sysInfo)) {
+          // Thecus N2520 does not provide system info
+          if ('OK' != $sysInfo->cpu_fan) {
+              $statusCode = max(self::STATUS_CRITICAL, $statusCode);
+              $statusTexts[] = 'CPU fan not OK';
+          }
 
-        if (isset($sysInfo->sys_fan_speed) && 'OK' != $sysInfo->sys_fan_speed) {
-            $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-            $statusTexts[] = 'System fan 1 not OK';
-        }
+          if (isset($sysInfo->sys_fan_speed) && 'OK' != $sysInfo->sys_fan_speed) {
+              $statusCode = max(self::STATUS_CRITICAL, $statusCode);
+              $statusTexts[] = 'System fan 1 not OK';
+          }
 
-        $fanNr = 2;
-        $fanName = 'sys_fan_speed' . $fanNr;
-        while (isset($sysInfo->$fanName)) {
-            if ('OK' != $sysInfo->$fanName) {
-                $statusCode = max(self::STATUS_CRITICAL, $statusCode);
-                $statusTexts[] = 'System fan ' . $fanNr . ' not OK';
-            }
+          $fanNr = 2;
+          $fanName = 'sys_fan_speed' . $fanNr;
+          while (isset($sysInfo->$fanName)) {
+              if ('OK' != $sysInfo->$fanName) {
+                  $statusCode = max(self::STATUS_CRITICAL, $statusCode);
+                  $statusTexts[] = 'System fan ' . $fanNr . ' not OK';
+              }
 
-            // Set next fan name
-            $fanNr += 1;
-            $fanName = 'sys_fan_speed' . $fanNr;
+              // Set next fan name
+              $fanNr += 1;
+              $fanName = 'sys_fan_speed' . $fanNr;
+          }
         }
 
         if (self::STATUS_OK == $statusCode) {
@@ -918,20 +921,23 @@ class ThecusChecker
         $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
 
         $sysInfo = $this->getSysStatus();
-        $cpuUsage = intval($sysInfo->cpu_loading);
+        if (isset($sysInfo)) {
+          // Thecus N2520 does not provide system info
+          $cpuUsage = intval($sysInfo->cpu_loading);
 
-        if (null !== $crit && $cpuUsage >= $crit) {
-            $statusCode = self::STATUS_CRITICAL;
-        } else if (null !== $warn && $cpuUsage >= $warn) {
-            $statusCode = self::STATUS_WARNING;
-        } else {
-            $statusCode = self::STATUS_OK;
+          if (null !== $crit && $cpuUsage >= $crit) {
+              $statusCode = self::STATUS_CRITICAL;
+          } else if (null !== $warn && $cpuUsage >= $warn) {
+              $statusCode = self::STATUS_WARNING;
+          } else {
+              $statusCode = self::STATUS_OK;
+          }
+
+          $statusText = 'CPU usage: ' . $cpuUsage . '%';
+          $perfData = 'CPU=' . $cpuUsage . ';' . $warn . ';' . $crit . ';0;100';
+
+          $this->addStatusInfo($statusCode, $statusText, $perfData);
         }
-
-        $statusText = 'CPU usage: ' . $cpuUsage . '%';
-        $perfData = 'CPU=' . $cpuUsage . ';' . $warn . ';' . $crit . ';0;100';
-
-        $this->addStatusInfo($statusCode, $statusText, $perfData);
     }
 
     /**

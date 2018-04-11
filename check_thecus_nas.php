@@ -895,19 +895,27 @@ class ThecusChecker
         $diskInfo = $this->getDiskInfo();
 
         foreach ($diskInfo->disk_data as $disk) {
-            if ('N/A' == $disk->s_status) {
-                continue;
-            } else if ('Critical' == $disk->s_status) {
-                $statusText = 'Disk ' . $disk->trayno . ' status: ' . $disk->s_status;
-                $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
-            } else if ('Warning' == $disk->s_status) {
-                $smartInfo = $this->checkSmartInfo($disk->diskno, $disk->trayno);
-                $smartInfo['statusCode'] = max(self::STATUS_WARNING, $smartInfo['statusCode']);
-                $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+            if (isset($disk->product_name) && $disk->product_name === "N2520") {
+                // handle N2520 differently
+                foreach ($disk->disks as $hdd) {
+                    $smartInfo = $this->checkSmartInfo("N2520", $hdd->tray_no);
+                    $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+                }
             } else {
-                // The cases 'OK' and 'Detected' (and possibly more?)
-                $smartInfo = $this->checkSmartInfo($disk->diskno, $disk->trayno);
-                $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+                if ('N/A' == $disk->s_status) {
+                    continue;
+                } else if ('Critical' == $disk->s_status) {
+                    $statusText = 'Disk ' . $disk->trayno . ' status: ' . $disk->s_status;
+                    $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
+                } else if ('Warning' == $disk->s_status) {
+                    $smartInfo = $this->checkSmartInfo($disk->diskno, $disk->trayno);
+                    $smartInfo['statusCode'] = max(self::STATUS_WARNING, $smartInfo['statusCode']);
+                    $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+                } else {
+                    // The cases 'OK' and 'Detected' (and possibly more?)
+                    $smartInfo = $this->checkSmartInfo($disk->diskno, $disk->trayno);
+                    $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
+                }
             }
         }
     }
@@ -1166,7 +1174,10 @@ class ThecusChecker
     protected function getSmartInfo($diskNo, $trayNo)
     {
         $uri  = '/adm/getmain.php?fun=smart';
-        $uri .= '&diskno=' . $diskNo;
+        if ($diskNo != "N2520") {
+          // N2520 does not allow setting the diskno attribute
+          $uri .= '&diskno=' . $diskNo;
+        }
         $uri .= '&trayno=' . $trayNo;
         $response = $this->jsonRequest($uri);
         return $response;

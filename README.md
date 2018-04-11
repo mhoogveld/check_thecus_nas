@@ -3,8 +3,10 @@ Monitoring plugin for Thecus NAS devices
 
 ## Overview
 This plugin can check the health and status of a Thecus NAS device. It has been developed and tested 
-against a Thecus N5500 running firmware V5.00.04
-Is can check and report CPU usage, system- and CPU-fans, RAID status, available disk space, disk health (bad-sectors) 
+against 
+- Thecus N5500 running firmware V5.00.04
+- Thecus N5200XXX running firmware V5.03.02
+It can check and report CPU usage, system- and CPU-fans, RAID status, available disk space, disk health (bad-sectors) 
 and disk temperature.
 
 The Thecus NAS device has (or at least some have) the option to enable and read out SNMP, but this option gives far 
@@ -19,8 +21,8 @@ and failures.
 
 ## Installation
 Requirements:
-* PHP version 5.3 (earlier versions are untested)
-* php5_curl
+* PHP version 5.3 or 7.x (earlier versions are untested)
+* php5_curl or php7x_curl
     For Debian based systems (e.g. Ubuntu): `sudo apt-get install php5-curl`
 
 Place the check script anywhere you'd like (eg /usr/local/lib/nagios/plugins) and run it

@@ -837,18 +837,21 @@ class ThecusChecker
 
         // Check RAID access status
         $raidAccessStatus = $this->getRaidAccessStatus();
-        if ('Damaged' == $raidAccessStatus->status) {
-            $statusCode = self::STATUS_CRITICAL;
-        } else if ('Degraded' == $raidAccessStatus->status) {
-            $statusCode = self::STATUS_WARNING;
-        } else if ('Healthy' == $raidAccessStatus->status) {
-            $statusCode = self::STATUS_OK;
-        } else {
-            $statusCode = self::STATUS_UNKNOWN;
-        }
+        if (isset($raidAccessStatus->status)) {
+          // N5200XXXX does not return RAID access status
+          if ('Damaged' == $raidAccessStatus->status) {
+              $statusCode = self::STATUS_CRITICAL;
+          } else if ('Degraded' == $raidAccessStatus->status) {
+              $statusCode = self::STATUS_WARNING;
+          } else if ('Healthy' == $raidAccessStatus->status) {
+              $statusCode = self::STATUS_OK;
+          } else {
+              $statusCode = self::STATUS_UNKNOWN;
+          }
 
-        if (self::STATUS_OK != $statusCode) {
-            $statusTexts[] = 'access status: ' . $raidAccessStatus->status;
+          if (self::STATUS_OK != $statusCode) {
+              $statusTexts[] = 'access status: ' . $raidAccessStatus->status;
+          }
         }
 
         // Check each RAID status (may be the same as above)

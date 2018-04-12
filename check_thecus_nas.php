@@ -98,6 +98,12 @@ class ThecusChecker
      */
     protected $perfData = array();
 
+    /** @var string */
+    protected $ignoreBadSectors;
+
+    /** @var string */
+    protected $ignoreSmartStatus;
+
     /** @var array  An (internally used) array of threshold types and values */
     protected $thresholds = array();
 
@@ -246,6 +252,50 @@ class ThecusChecker
     protected function setPerfData($perfData)
     {
         $this->perfData = $perfData;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIgnoreBadSectors()
+    {
+        if (isset($this->ignoreBadSectors) && $this->ignoreBadSectors == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $ignoreBadSectors
+     * @return self
+     */
+    public function setIgnoreBadSectors($ignoreBadSectors)
+    {
+        $this->ignoreBadSectors = $ignoreBadSectors;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIgnoreSmartStatus()
+    {
+        if (isset($this->ignoreSmartStatus) && $this->ignoreSmartStatus == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $ignoreSmartStatus
+     * @return self
+     */
+    public function setIgnoreSmartStatus($ignoreSmartStatus)
+    {
+        $this->ignoreSmartStatus = $ignoreSmartStatus;
         return $this;
     }
 
@@ -615,6 +665,8 @@ class ThecusChecker
             'disk-usage-critical:',
             'disk-temp-warning:',
             'disk-temp-critical:',
+            'ignore-bad-sectors',
+            'ignore-smart-status',
         );
 
         $opts = getopt($shortOpts, $longOpts);
@@ -700,6 +752,12 @@ class ThecusChecker
         }
         if (isset($opts['disk-temp-critical'])) {
             $this->setDiskTempThreshold(ThecusChecker::STATUS_CRITICAL, intval($opts['disk-temp-critical']));
+        }
+        if (isset($opts['ignore-bad-sectors'])) {
+            $this->setIgnoreBadSectors($opts['ignore-bad-sectors']);
+        }
+        if (isset($opts['ignore-smart-status'])) {
+            $this->setIgnoreSmartStatus($opts['ignore-smart-status']);
         }
     }
 
@@ -1058,12 +1116,12 @@ class ThecusChecker
         $perfData = array();
 
         $smartInfo = $this->getSmartInfo($diskNo, $trayNo);
-        if (0 !== $smartInfo->smart_status) {
+        if (0 !== $smartInfo->smart_status && !$this->getIgnoreSmartStatus()) {
             $statusCode = self::STATUS_CRITICAL;
             $statusTexts[] = 'Status not OK';
         }
 
-        if (isset($smartInfo->ATTR5)) {
+        if (isset($smartInfo->ATTR5) && !$this->getIgnoreBadSectors()) {
             $reallocSectorCount = intval($smartInfo->ATTR5);
             $crit = $this->getReallocSectThreshold(self::STATUS_CRITICAL);
             $warn = $this->getReallocSectThreshold(self::STATUS_WARNING);

@@ -804,6 +804,8 @@ class ThecusChecker
         echo '       --disk-usage-critical  Disk usage critical level % (default: 90)' . PHP_EOL;
         echo '       --disk-temp-warning    Disk temperature warning level in °C (default: 50)' . PHP_EOL;
         echo '       --disk-temp-critical   Disk temperature critical level in °C (default: 60)' . PHP_EOL;
+        echo '       --ignore-bad-sectors   Ignore bad sectors until the given amount (default: 0)' . PHP_EOL;
+        echo '       --ignore-smart-status  One might want to ignore smart status (default: false)' . PHP_EOL;
         echo '   -h, --help                 Display this help and exit' . PHP_EOL;
         echo '   -v, --verbose              Display extra information, useful for debugging' . PHP_EOL;
         echo '       --version              Display version information and exit' . PHP_EOL;

@@ -260,10 +260,10 @@ class ThecusChecker
      */
     public function getIgnoreBadSectors()
     {
-        if (isset($this->ignoreBadSectors) && $this->ignoreBadSectors == true) {
-            return true;
+        if (isset($this->ignoreBadSectors)) {
+            return $this->ignoreBadSectors;
         } else {
-            return false;
+            return 0;
         }
     }
 
@@ -1121,16 +1121,18 @@ class ThecusChecker
             $statusTexts[] = 'Status not OK';
         }
 
-        if (isset($smartInfo->ATTR5) && !$this->getIgnoreBadSectors()) {
+        if (isset($smartInfo->ATTR5)) {
             $reallocSectorCount = intval($smartInfo->ATTR5);
-            $crit = $this->getReallocSectThreshold(self::STATUS_CRITICAL);
-            $warn = $this->getReallocSectThreshold(self::STATUS_WARNING);
-            if (null !== $crit && $reallocSectorCount >= $crit) {
-                $statusCode = self::STATUS_CRITICAL;
-                $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
-            } else if (null !== $warn && $reallocSectorCount >= $warn) {
-                $statusCode = max(self::STATUS_WARNING, $statusCode);
-                $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
+            if ($reallocSectorCount > $this->getIgnoreBadSectors()) {
+                $crit = $this->getReallocSectThreshold(self::STATUS_CRITICAL);
+                $warn = $this->getReallocSectThreshold(self::STATUS_WARNING);
+                if (null !== $crit && $reallocSectorCount >= $crit) {
+                    $statusCode = self::STATUS_CRITICAL;
+                    $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
+                } else if (null !== $warn && $reallocSectorCount >= $warn) {
+                    $statusCode = max(self::STATUS_WARNING, $statusCode);
+                    $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
+                }
             }
         }
 

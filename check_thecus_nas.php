@@ -665,8 +665,8 @@ class ThecusChecker
             'disk-usage-critical:',
             'disk-temp-warning:',
             'disk-temp-critical:',
-            'ignore-bad-sectors',
-            'ignore-smart-status',
+            'ignore-bad-sectors:',
+            'ignore-smart-status:',
         );
 
         $opts = getopt($shortOpts, $longOpts);

@@ -918,7 +918,7 @@ class ThecusChecker
 
         $sysHealth = $this->getNasStatus();
 
-        if (isset($sysHealth->fan) && 'on' != $sysHealth->fan) {
+        if (isset($sysHealth->fan) && ('on' != $sysHealth->fan && 'none' != $sysHealth->fan)) {
             $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan not OK');
         }
         if (isset($sysHealth->raid) && 'on' != $sysHealth->raid) {

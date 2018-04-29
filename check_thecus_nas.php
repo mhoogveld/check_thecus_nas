@@ -1098,7 +1098,7 @@ class ThecusChecker
                         $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
                     } else {
                         if (('Warning' === $diskStatus) || ('1' === $diskStatus) || (1 === $diskStatus)) {
-                            $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
+                            $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
                             $this->addStatusInfo(
                                 max(self::STATUS_WARNING, $smartInfo['statusCode']),
                                 $smartInfo['statusText'],
@@ -1106,7 +1106,7 @@ class ThecusChecker
                             );
                         } else if (('OK' === $diskStatus) || ('Detected' === $diskStatus) || ('0' === $diskStatus) || (0 === $diskStatus)) {
                             // The cases 'OK', 'Detected', '0' (and possibly more?)
-                            $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
+                            $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
                             $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
                         }
                     }

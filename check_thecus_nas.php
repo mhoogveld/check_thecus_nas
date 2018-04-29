@@ -1090,21 +1090,21 @@ class ThecusChecker
                     }
                 }
 
-                if ('N/A' == $diskStatus) {
+                if ('N/A' === $diskStatus) {
                     continue;
                 } else {
-                    if (('Critical' == $diskStatus) || ('2' == $diskStatus)) {
-                        $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->trayno . ': ' . $disk->s_status;
+                    if (('Critical' === $diskStatus) || ('2' === $diskStatus) || (2 === $diskStatus)) {
+                        $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->tray_no . ': ' . $disk->s_status;
                         $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
                     } else {
-                        if (('Warning' == $diskStatus) || ('1' == $diskStatus)) {
+                        if (('Warning' === $diskStatus) || ('1' === $diskStatus) || (1 === $diskStatus)) {
                             $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
                             $this->addStatusInfo(
                                 max(self::STATUS_WARNING, $smartInfo['statusCode']),
                                 $smartInfo['statusText'],
                                 $smartInfo['perfData']
                             );
-                        } else {
+                        } else if (('OK' === $diskStatus) || ('Detected' === $diskStatus) || ('0' === $diskStatus) || (0 === $diskStatus)) {
                             // The cases 'OK', 'Detected', '0' (and possibly more?)
                             $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
                             $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);

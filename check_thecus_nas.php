@@ -1057,23 +1057,21 @@ class ThecusChecker
         $diskInfo = $this->getDiskInfo();
 
         $diskData = $diskInfo->disk_data;
-
         // Fill the disklist array with all disks found in a one or two dimensional array
         $diskList = array();
-        if (isset($diskData->disks) && is_array($diskData->disks)) {
-            foreach ($diskInfo->disk_data as $diskArrayElement) {
-                foreach ($diskArrayElement->disks as $disk) {
-                    if (!isset($diskList[$disk->tray_no])) {
-                        $diskList[$disk->tray_no] = array();
+        foreach ($diskInfo->disk_data as $disk) {
+            if (isset($disk->disks)) {
+                foreach ($disk->disks as $d) {
+                    $diskList[$d->tray_no][$d->disk_no] = $d;
+                }
+            } else if (!isset($diskList[$disk->trayno])) {
+                foreach ($diskInfo->disk_data as $disk) {
+                    if (!isset($diskList[$disk->trayno])) {
+                        $diskList[$disk->trayno] = array();
                     }
-                    $diskList[$disk->tray_no][$disk->disk_no] = $disk;
+                    $diskList[$disk->trayno][$disk->diskno] = $disk;
                 }
-            }
-        } else {
-            foreach ($diskInfo->disk_data as $disk) {
-                if (!isset($diskList[$disk->trayno])) {
-                    $diskList[$disk->trayno] = array();
-                }
+            } else {
                 $diskList[$disk->trayno][$disk->diskno] = $disk;
             }
         }

@@ -1477,21 +1477,21 @@ class ThecusChecker
         $uriList[] = $uri;
 
         $uri  = '/adm/getmain.php?fun=smart';
-        if ($diskNo === "no_disk_no") {
-            // N2520 and N8800 need a translation of their disk no to char
-            $letter = chr($trayNo + 96);
-            $uri .= '&diskno=' . $letter;
-        } else {
-            $uri .= '&diskno=' . $diskNo;
-        }
+        $uri .= '&diskno=' . $diskNo;
+        $uri .= '&trayno=' . $trayNo;
+        $uriList[] = $uri;
+
+        $letter = chr($trayNo + 96);
+        $uri  = '/adm/getmain.php?fun=smart';
+        $uri .= '&diskno=' . $letter;
         $uri .= '&trayno=' . $trayNo;
         $uriList[] = $uri;
 
         $responses = $this->jsonTryMultipleRequests($uriList, null, true, true);
-        // Sadly, both uri's could return json, but possibly without valid data
+        // Sadly, all uri's could return json, but possibly without valid data
         // Find a valid response
         foreach ($responses as $response) {
-            if (isset($response->model) && ($response->model != 'N/A')) {
+            if (isset($response->model) && ($response->model != 'N/A' && $response->tray_no != '')) {
                 return $response;
             }
         }

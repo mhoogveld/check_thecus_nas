@@ -913,11 +913,8 @@ class ThecusChecker
         if ($this->debug) {
             print("Entering checkSystemHealth()" . PHP_EOL);
         }
-
         $this->addStatusInfo(self::STATUS_OK);
-
         $sysHealth = $this->getNasStatus();
-
         if (isset($sysHealth->fan) && ('on' != $sysHealth->fan && 'none' != $sysHealth->fan)) {
             $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan not OK');
         }
@@ -935,11 +932,9 @@ class ThecusChecker
             if (isset($sysInfo->cpu_fan) && 'OK' != $sysInfo->cpu_fan) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'CPU fan not OK');
             }
-
             if (isset($sysInfo->sys_fan_speed) && 'OK' != $sysInfo->sys_fan_speed) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan 1 not OK');
             }
-
             if (isset($sysInfo->sys_fan_speed1) && 'OK' != $sysInfo->sys_fan_speed1) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan 1 not OK');
             }
@@ -1161,11 +1156,9 @@ class ThecusChecker
     {
         $crit = $this->getCpuUsageThreshold(self::STATUS_CRITICAL);
         $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
-
         $sysInfo = $this->getSysStatus();
         $sysArray = $sysInfo->series;
         $cpuUsage = $sysArray->CPU;
-
         if (null !== $crit && $cpuUsage >= $crit) {
             $statusCode = self::STATUS_CRITICAL;
         } else if ((null !== $warn) && ($cpuUsage >= $warn)) {

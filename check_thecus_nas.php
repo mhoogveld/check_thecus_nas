@@ -52,7 +52,7 @@ class ThecusChecker
     const DEFAULT_CPU_WARN = 90;
     const DEFAULT_CPU_CRIT = 95;
 
-	/** Default values for memory usage thesholds in percentage */
+    /** Default values for memory usage thesholds in percentage */
     const DEFAULT_MEM_WARN = 90;
     const DEFAULT_MEM_CRIT = 95;
 
@@ -171,6 +171,7 @@ class ThecusChecker
 
     /**
      * @param string $hostname
+     *
      * @return self
      */
     public function setHostname($hostname)
@@ -189,6 +190,7 @@ class ThecusChecker
 
     /**
      * @param string $username
+     *
      * @return self
      */
     public function setUsername($username)
@@ -207,6 +209,7 @@ class ThecusChecker
 
     /**
      * @param string $password
+     *
      * @return self
      */
     public function setPassword($password)
@@ -225,6 +228,7 @@ class ThecusChecker
 
     /**
      * @param int $statusCode
+     *
      * @return self
      */
     protected function setStatusCode($statusCode)
@@ -243,6 +247,7 @@ class ThecusChecker
 
     /**
      * @param string[] $statusText
+     *
      * @return self
      */
     protected function setStatusText($statusText)
@@ -261,6 +266,7 @@ class ThecusChecker
 
     /**
      * @param string[] $perfData
+     *
      * @return self
      */
     protected function setPerfData($perfData)
@@ -283,6 +289,7 @@ class ThecusChecker
 
     /**
      * @param string $ignoreBadSectors
+     *
      * @return self
      */
     public function setIgnoreBadSectors($ignoreBadSectors)
@@ -305,6 +312,7 @@ class ThecusChecker
 
     /**
      * @param string $ignoreSmartStatus
+     *
      * @return self
      */
     public function setIgnoreSmartStatus($ignoreSmartStatus)
@@ -323,6 +331,7 @@ class ThecusChecker
      * @param int $code
      * @param string[]|string|null $text
      * @param string[]|string|null $perfData
+     *
      * @return self
      */
     protected function setStatusInfo($code, $text = null, $perfData = null)
@@ -359,6 +368,7 @@ class ThecusChecker
      * @param int $code
      * @param string|null $text
      * @param string|null $perfData
+     *
      * @return self
      */
     protected function addStatusInfo($code, $text = null, $perfData = null)
@@ -379,7 +389,8 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getReallocSectThreshold($level)
@@ -388,8 +399,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setReallocSectThreshold($level, $value)
@@ -398,7 +410,8 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getDiskUsageThreshold($level)
@@ -407,8 +420,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setDiskUsageThreshold($level, $value)
@@ -417,7 +431,8 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getDiskTempThreshold($level)
@@ -426,8 +441,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setDiskTempThreshold($level, $value)
@@ -436,7 +452,8 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getCurPendingSectThreshold($level)
@@ -445,8 +462,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setCurPendingSectThreshold($level, $value)
@@ -455,7 +473,8 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getCpuUsageThreshold($level)
@@ -464,8 +483,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setCpuUsageThreshold($level, $value)
@@ -473,8 +493,9 @@ class ThecusChecker
         return $this->setThreshold('cpu_usage', $level, $value);
     }
 
-	 /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+    /**
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getMemoryUsageThreshold($level)
@@ -483,8 +504,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setMemoryUsageThreshold($level, $value)
@@ -494,6 +516,7 @@ class ThecusChecker
 
     /**
      * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     public function getUptimeThreshold($level)
@@ -502,8 +525,9 @@ class ThecusChecker
     }
 
     /**
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setUptimeThreshold($level, $value)
@@ -514,7 +538,8 @@ class ThecusChecker
 
     /**
      * @param string $type
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     *
      * @return int|null
      */
     protected function getThreshold($type, $level)
@@ -529,8 +554,9 @@ class ThecusChecker
 
     /**
      * @param $type
-     * @param int $level  One of self::STATUS_WARNING or self::STATUS_CRITICAL
+     * @param int $level One of self::STATUS_WARNING or self::STATUS_CRITICAL
      * @param int|null $value
+     *
      * @return self
      */
     public function setThreshold($type, $level, $value)
@@ -561,6 +587,7 @@ class ThecusChecker
 
     /**
      * @param $code
+     *
      * @return null|string
      */
     public static function statusCodeToText($code)
@@ -585,7 +612,8 @@ class ThecusChecker
     }
 
     /**
-     * @param string $type  One of the self::TYPE_XXX constants
+     * @param string $type One of the self::TYPE_XXX constants
+     *
      * @return self
      * @throws ThecusException
      */
@@ -788,7 +816,7 @@ class ThecusChecker
             $this->setCpuUsageThreshold(ThecusChecker::STATUS_CRITICAL, intval($opts['cpu-critical']));
         }
 
-		if (isset($opts['mem-warning'])) {
+        if (isset($opts['mem-warning'])) {
             $this->setMemoryUsageThreshold(ThecusChecker::STATUS_WARNING, intval($opts['mem-warning']));
         }
         if (isset($opts['mem-critical'])) {
@@ -854,10 +882,10 @@ class ThecusChecker
         echo '   -u, --username             The username (usually admin)' . PHP_EOL;
         echo '   -p, --password             The password' . PHP_EOL;
         echo '   -t, --type                 The check type. One of:' . PHP_EOL;
-        echo '                                health     - check system health (fans, temp, disks, raid)'. PHP_EOL;
-        echo '                                cpu        - check cpu usage'. PHP_EOL;
-        echo '                                memory 	 - check memory usage'. PHP_EOL;
-        echo '                                disk-usage - check disk usage'. PHP_EOL;
+        echo '                                health     - check system health (fans, temp, disks, raid)' . PHP_EOL;
+        echo '                                cpu        - check cpu usage' . PHP_EOL;
+        echo '                                memory 	 - check memory usage' . PHP_EOL;
+        echo '                                disk-usage - check disk usage' . PHP_EOL;
         echo '       --cpu-warning          CPU usage warning level in % (default: 90)' . PHP_EOL;
         echo '       --cpu-critical         CPU usage critical level in % (default: 95)' . PHP_EOL;
         echo '       --mem-warning          RAM usage warning level in % (default: 90)' . PHP_EOL;
@@ -949,9 +977,9 @@ class ThecusChecker
                     $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan ' . $fanNr . ' not OK');
                 }
 
-              // Set next fan name
-              $fanNr += 1;
-              $fanName = 'sys_fan_speed' . $fanNr;
+                // Set next fan name
+                $fanNr += 1;
+                $fanName = 'sys_fan_speed' . $fanNr;
             }
         }
 
@@ -996,20 +1024,22 @@ class ThecusChecker
         // Check RAID access status
         $raidAccessStatus = $this->getRaidAccessStatus();
         if (isset($raidAccessStatus->status)) {
-          // N5200XXXX does not return RAID access status
-          if ('Damaged' == $raidAccessStatus->status) {
-              $statusCode = self::STATUS_CRITICAL;
-          } else if ('Degraded' == $raidAccessStatus->status) {
-              $statusCode = self::STATUS_WARNING;
-          } else if ('Healthy' == $raidAccessStatus->status) {
-              $statusCode = self::STATUS_OK;
-          } else {
-              $statusCode = self::STATUS_UNKNOWN;
-          }
+            // N5200XXXX does not return RAID access status
+            if ('Damaged' == $raidAccessStatus->status) {
+                $statusCode = self::STATUS_CRITICAL;
+            } else if ('Degraded' == $raidAccessStatus->status) {
+                $statusCode = self::STATUS_WARNING;
+            } else if ('Healthy' == $raidAccessStatus->status) {
+                $statusCode = self::STATUS_OK;
+            } else {
+                $statusCode = self::STATUS_UNKNOWN;
+            }
 
-          if (self::STATUS_OK != $statusCode) {
-              $statusTexts[] = 'access status: ' . $raidAccessStatus->status;
-          }
+            if (self::STATUS_OK != $statusCode) {
+                $statusTexts[] = 'access status: ' . $raidAccessStatus->status;
+            }
+        } else {
+            $statusCode = self::STATUS_UNKNOWN;
         }
 
         // Check each RAID status (may be the same as above)
@@ -1054,8 +1084,7 @@ class ThecusChecker
 
         $diskInfo = $this->getDiskInfo();
 
-        $diskData = $diskInfo->disk_data;
-        // Fill the disklist array with all disks found in a one or two dimensional array
+        // Fill the diskList array with all disks found in the one or two dimensional diskInfo array
         $diskList = array();
         foreach ($diskInfo->disk_data as $disk) {
             if (isset($disk->disks)) {
@@ -1074,7 +1103,7 @@ class ThecusChecker
             }
         }
 
-        // Check each disk in the disk list array
+        // Check each disk in the diskList array
         foreach ($diskList as $trayNr => $trayData) {
             foreach ($trayData as $diskNr => $disk) {
                 // Find the disk status
@@ -1126,26 +1155,27 @@ class ThecusChecker
         $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
 
         $sysInfo = $this->getSysStatus();
-        if (isset($sysInfo)) {
-          // Thecus N2520 does not provide system info
-            if (isset($sysInfo->cpu_loading)) {
-                $cpuUsage = intval($sysInfo->cpu_loading);
-            } else if (isset($sysInfo->series->CPU)) {
-                $cpuUsage = $sysInfo->series->CPU;
-            } else {
-                $this->addStatusInfo(self::STATUS_UNKNOWN, 'Cpu usage unknown');
-                return;
-            }
-
-            if ((null !== $crit) && ($cpuUsage >= $crit)) {
-                $statusCode = self::STATUS_CRITICAL;
-            } else if (null !== $warn && $cpuUsage >= $warn) {
-                $statusCode = self::STATUS_WARNING;
-            } else {
-                $statusCode = self::STATUS_OK;
-            }
+        if (!isset($sysInfo)) {
+            $this->addStatusInfo(self::STATUS_UNKNOWN, "CPU usage unknown");
         }
 
+        // Thecus N2520 does not provide system info
+        if (isset($sysInfo->cpu_loading)) {
+            $cpuUsage = intval($sysInfo->cpu_loading);
+        } else if (isset($sysInfo->series->CPU)) {
+            $cpuUsage = $sysInfo->series->CPU;
+        } else {
+            $this->addStatusInfo(self::STATUS_UNKNOWN, 'Cpu usage unknown');
+            return;
+        }
+
+        if ((null !== $crit) && ($cpuUsage >= $crit)) {
+            $statusCode = self::STATUS_CRITICAL;
+        } else if (null !== $warn && $cpuUsage >= $warn) {
+            $statusCode = self::STATUS_WARNING;
+        } else {
+            $statusCode = self::STATUS_OK;
+        }
         $statusText = 'CPU usage: ' . $cpuUsage . '%';
         $perfData = 'CPU=' . $cpuUsage . ';' . $warn . ';' . $crit . ';0;100';
 
@@ -1176,7 +1206,7 @@ class ThecusChecker
         $this->addStatusInfo($statusCode, $statusText, $perfData);
     }
 
-	protected function checkMemoryUsage()
+    protected function checkMemoryUsage()
     {
         if ($this->debug) {
             print("Entering checkMemoryUsage()" . PHP_EOL);
@@ -1315,8 +1345,9 @@ class ThecusChecker
     /**
      * Checks various SMART attibutes
      *
-     * @param string $diskNr  The disk number as returned by $this->getStatusText()
-     * @param string $trayNr  The tray number as returned by $this->getStatusText()
+     * @param string $diskNr The disk number as returned by $this->getStatusText()
+     * @param string $trayNr The tray number as returned by $this->getStatusText()
+     *
      * @return array Returns status info in an associative array with keys
      *               'statusCode', 'statusText' and 'perfData' which can be fed
      *               to $this->addStatusInfo()
@@ -1454,6 +1485,7 @@ class ThecusChecker
     /**
      * @param string $diskNo
      * @param string $trayNo
+     *
      * @return Object Information as returned in json by the Thecus device
      * @throws Exception
      * @throws ThecusAuthorizationException
@@ -1468,14 +1500,14 @@ class ThecusChecker
         $uriList = array();
 
         if (!isset($this->diskUriType) || $this->diskUriType === 0) {
-            $uri  = '/adm/getmain.php?fun=smart';
+            $uri = '/adm/getmain.php?fun=smart';
             $uri .= '&disk_no=' . $diskNo;
             $uri .= '&tray_no=' . $trayNo;
             $uriList[] = $uri;
         }
 
         if (!isset($this->diskUriType) || $this->diskUriType === 1) {
-            $uri  = '/adm/getmain.php?fun=smart';
+            $uri = '/adm/getmain.php?fun=smart';
             $uri .= '&diskno=' . $diskNo;
             $uri .= '&trayno=' . $trayNo;
             $uriList[] = $uri;
@@ -1483,7 +1515,7 @@ class ThecusChecker
 
         if (!isset($this->diskUriType) || $this->diskUriType === 2) {
             $letter = chr($trayNo + 96);
-            $uri  = '/adm/getmain.php?fun=smart';
+            $uri = '/adm/getmain.php?fun=smart';
             $uri .= '&diskno=' . $letter;
             $uri .= '&trayno=' . $trayNo;
             $uriList[] = $uri;
@@ -1492,7 +1524,7 @@ class ThecusChecker
         $responses = $this->jsonTryMultipleRequests($uriList, null, true, true);
         // Sadly, all uri's could return json, but possibly without valid data
         // Find a valid response
-        foreach ($responses as $i=>$response) {
+        foreach ($responses as $i => $response) {
             if (isset($response->model) && ($response->model != 'N/A' && $response->tray_no != '')) {
                 if (!isset($this->diskUriType) || empty($this->diskUriType)) {
                     // remember this URI type for further smart checks, reduces the number of requests massively on larger storages
@@ -1557,7 +1589,7 @@ class ThecusChecker
             print("Entering login()" . PHP_EOL);
         }
 
-        $postInfo  = 'username=' . urlencode($this->getUsername());
+        $postInfo = 'username=' . urlencode($this->getUsername());
         $postInfo .= '&pwd=' . urlencode($this->getPassword());
         $postInfo .= '&p_user=' . urlencode($this->getUsername());
         $postInfo .= '&p_pass=' . urlencode($this->getPassword());
@@ -1592,11 +1624,12 @@ class ThecusChecker
     }
 
     /**
-     * @param array $uriList  An array of uri's which are tried. The first valid response received is returned
-     * @param string|null $post  POST data as string if this is a POST-request, null for a GET-request.
-     * @param bool $autoLogin  If set to true and the initial request was deemed unauthorized by the Thecus device,
+     * @param array|string $uriList An array of uri's which are tried. The first valid response received is returned
+     * @param string|null $post POST data as string if this is a POST-request, null for a GET-request.
+     * @param bool $autoLogin If set to true and the initial request was deemed unauthorized by the Thecus device,
      *                         a login attempt will be made after which the request it sent again.
-     * @param bool $returnAllResponses  If set to true, all (valid) responses will be returned in an array
+     * @param bool $returnAllResponses If set to true, all (valid) responses will be returned in an array
+     *
      * @return Object|array  The parsed json data as object or array of objects
      * @throws ThecusException
      */
@@ -1643,10 +1676,11 @@ class ThecusChecker
     }
 
     /**
-     * @param string $uri  The URI to call on the host (eg "/adm/login.php")
-     * @param string|null $post  POST data as string if this is a POST-request, null for a GET-request.
-     * @param bool $autoLogin  If set to true and the initial request was deemed unauthorized by the Thecus device,
+     * @param string $uri The URI to call on the host (eg "/adm/login.php")
+     * @param string|null $post POST data as string if this is a POST-request, null for a GET-request.
+     * @param bool $autoLogin If set to true and the initial request was deemed unauthorized by the Thecus device,
      *                         a login attempt will be made after which the request it sent again.
+     *
      * @return Object  The parsed json data
      * @throws Exception
      * @throws ThecusAuthenticationException
@@ -1725,8 +1759,9 @@ class ThecusChecker
     /**
      * Checks in various ways to see if the request returned an error
      *
-     * @param resource $ch  The curl resource
-     * @param string $responseBody  The raw response body
+     * @param resource $ch The curl resource
+     * @param string $responseBody The raw response body
+     *
      * @throws ThecusAuthenticationException
      * @throws ThecusAuthorizationException
      * @throws ThecusException

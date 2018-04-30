@@ -118,6 +118,9 @@ class ThecusChecker
     /** @var string */
     protected $cookieDir = '/tmp';
 
+    /** @var int */
+    protected $diskUriType;
+
     /**
      * @param string|null $hostname
      * @param string|null $username
@@ -1464,27 +1467,37 @@ class ThecusChecker
 
         $uriList = array();
 
-        $uri  = '/adm/getmain.php?fun=smart';
-        $uri .= '&disk_no=' . $diskNo;
-        $uri .= '&tray_no=' . $trayNo;
-        $uriList[] = $uri;
+        if (!isset($this->diskUriType) || $this->diskUriType === 0) {
+            $uri  = '/adm/getmain.php?fun=smart';
+            $uri .= '&disk_no=' . $diskNo;
+            $uri .= '&tray_no=' . $trayNo;
+            $uriList[] = $uri;
+        }
 
-        $uri  = '/adm/getmain.php?fun=smart';
-        $uri .= '&diskno=' . $diskNo;
-        $uri .= '&trayno=' . $trayNo;
-        $uriList[] = $uri;
+        if (!isset($this->diskUriType) || $this->diskUriType === 1) {
+            $uri  = '/adm/getmain.php?fun=smart';
+            $uri .= '&diskno=' . $diskNo;
+            $uri .= '&trayno=' . $trayNo;
+            $uriList[] = $uri;
+        }
 
-        $letter = chr($trayNo + 96);
-        $uri  = '/adm/getmain.php?fun=smart';
-        $uri .= '&diskno=' . $letter;
-        $uri .= '&trayno=' . $trayNo;
-        $uriList[] = $uri;
+        if (!isset($this->diskUriType) || $this->diskUriType === 2) {
+            $letter = chr($trayNo + 96);
+            $uri  = '/adm/getmain.php?fun=smart';
+            $uri .= '&diskno=' . $letter;
+            $uri .= '&trayno=' . $trayNo;
+            $uriList[] = $uri;
+        }
 
         $responses = $this->jsonTryMultipleRequests($uriList, null, true, true);
         // Sadly, all uri's could return json, but possibly without valid data
         // Find a valid response
-        foreach ($responses as $response) {
+        foreach ($responses as $i=>$response) {
             if (isset($response->model) && ($response->model != 'N/A' && $response->tray_no != '')) {
+                if (!isset($this->diskUriType) || empty($this->diskUriType)) {
+                    // remember this URI type for further smart checks, reduces the number of requests massively on larger storages
+                    $this->diskUriType = $i;
+                }
                 return $response;
             }
         }

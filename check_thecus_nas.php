@@ -1060,16 +1060,11 @@ class ThecusChecker
         foreach ($diskInfo->disk_data as $disk) {
             if (isset($disk->disks)) {
                 foreach ($disk->disks as $d) {
-                    $diskList[$d->tray_no][$d->disk_no] = $d;
+                    if (!isset($diskList[$d->tray_no])) {
+                        $diskList[$d->tray_no][$d->disk_no] = $d;
+                    }
                 }
             } else if (!isset($diskList[$disk->trayno])) {
-                foreach ($diskInfo->disk_data as $disk) {
-                    if (!isset($diskList[$disk->trayno])) {
-                        $diskList[$disk->trayno] = array();
-                    }
-                    $diskList[$disk->trayno][$disk->diskno] = $disk;
-                }
-            } else {
                 $diskList[$disk->trayno][$disk->diskno] = $disk;
             }
         }

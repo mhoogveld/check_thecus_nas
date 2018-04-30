@@ -118,6 +118,9 @@ class ThecusChecker
     /** @var string */
     protected $cookieDir = '/tmp';
 
+    /** @var int */
+    protected $diskUriType;
+
     /**
      * @param string|null $hostname
      * @param string|null $username
@@ -913,12 +916,9 @@ class ThecusChecker
         if ($this->debug) {
             print("Entering checkSystemHealth()" . PHP_EOL);
         }
-
         $this->addStatusInfo(self::STATUS_OK);
-
         $sysHealth = $this->getNasStatus();
-
-        if (isset($sysHealth->fan) && 'on' != $sysHealth->fan) {
+        if (isset($sysHealth->fan) && ('on' != $sysHealth->fan && 'none' != $sysHealth->fan)) {
             $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan not OK');
         }
         if (isset($sysHealth->raid) && 'on' != $sysHealth->raid) {
@@ -935,11 +935,9 @@ class ThecusChecker
             if (isset($sysInfo->cpu_fan) && 'OK' != $sysInfo->cpu_fan) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'CPU fan not OK');
             }
-
             if (isset($sysInfo->sys_fan_speed) && 'OK' != $sysInfo->sys_fan_speed) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan 1 not OK');
             }
-
             if (isset($sysInfo->sys_fan_speed1) && 'OK' != $sysInfo->sys_fan_speed1) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan 1 not OK');
             }
@@ -1057,23 +1055,21 @@ class ThecusChecker
         $diskInfo = $this->getDiskInfo();
 
         $diskData = $diskInfo->disk_data;
-
         // Fill the disklist array with all disks found in a one or two dimensional array
         $diskList = array();
-        if (isset($diskData->disks) && is_array($diskData->disks)) {
-            foreach ($diskInfo->disk_data as $diskArrayElement) {
-                foreach ($diskArrayElement->disks as $disk) {
-                    if (!isset($diskList[$disk->tray_no])) {
-                        $diskList[$disk->tray_no] = array();
+        foreach ($diskInfo->disk_data as $disk) {
+            if (isset($disk->disks)) {
+                foreach ($disk->disks as $d) {
+                    $diskList[$d->tray_no][$d->disk_no] = $d;
+                }
+            } else if (!isset($diskList[$disk->trayno])) {
+                foreach ($diskInfo->disk_data as $disk) {
+                    if (!isset($diskList[$disk->trayno])) {
+                        $diskList[$disk->trayno] = array();
                     }
-                    $diskList[$disk->tray_no][$disk->disk_no] = $disk;
+                    $diskList[$disk->trayno][$disk->diskno] = $disk;
                 }
-            }
-        } else {
-            foreach ($diskInfo->disk_data as $disk) {
-                if (!isset($diskList[$disk->trayno])) {
-                    $diskList[$disk->trayno] = array();
-                }
+            } else {
                 $diskList[$disk->trayno][$disk->diskno] = $disk;
             }
         }
@@ -1092,23 +1088,23 @@ class ThecusChecker
                     }
                 }
 
-                if ('N/A' == $diskStatus) {
+                if ('N/A' === $diskStatus) {
                     continue;
                 } else {
-                    if (('Critical' == $diskStatus) || ('2' == $diskStatus)) {
-                        $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->trayno . ': ' . $disk->s_status;
+                    if (('Critical' === $diskStatus) || ('2' === $diskStatus) || (2 === $diskStatus)) {
+                        $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->tray_no . ': ' . $disk->s_status;
                         $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
                     } else {
-                        if (('Warning' == $diskStatus) || ('1' == $diskStatus)) {
-                            $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
+                        if (('Warning' === $diskStatus) || ('1' === $diskStatus) || (1 === $diskStatus)) {
+                            $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
                             $this->addStatusInfo(
                                 max(self::STATUS_WARNING, $smartInfo['statusCode']),
                                 $smartInfo['statusText'],
                                 $smartInfo['perfData']
                             );
-                        } else {
+                        } else if (('OK' === $diskStatus) || ('Detected' === $diskStatus) || ('0' === $diskStatus) || (0 === $diskStatus)) {
                             // The cases 'OK', 'Detected', '0' (and possibly more?)
-                            $smartInfo = $this->checkSmartInfo($trayNr, $diskNr);
+                            $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
                             $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
                         }
                     }
@@ -1163,11 +1159,9 @@ class ThecusChecker
     {
         $crit = $this->getCpuUsageThreshold(self::STATUS_CRITICAL);
         $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
-
         $sysInfo = $this->getSysStatus();
         $sysArray = $sysInfo->series;
         $cpuUsage = $sysArray->CPU;
-
         if (null !== $crit && $cpuUsage >= $crit) {
             $statusCode = self::STATUS_CRITICAL;
         } else if ((null !== $warn) && ($cpuUsage >= $warn)) {
@@ -1473,27 +1467,37 @@ class ThecusChecker
 
         $uriList = array();
 
-        $uri  = '/adm/getmain.php?fun=smart';
-        $uri .= '&disk_no=' . $diskNo;
-        $uri .= '&tray_no=' . $trayNo;
-        $uriList[] = $uri;
-
-        $uri  = '/adm/getmain.php?fun=smart';
-        if ($diskNo === "no_disk_no") {
-            // N2520 and N8800 need a translation of their disk no to char
-            $letter = chr($trayNo + 96);
-            $uri .= '&diskno=' . $letter;
-        } else {
-            $uri .= '&diskno=' . $diskNo;
+        if (!isset($this->diskUriType) || $this->diskUriType === 0) {
+            $uri  = '/adm/getmain.php?fun=smart';
+            $uri .= '&disk_no=' . $diskNo;
+            $uri .= '&tray_no=' . $trayNo;
+            $uriList[] = $uri;
         }
-        $uri .= '&trayno=' . $trayNo;
-        $uriList[] = $uri;
+
+        if (!isset($this->diskUriType) || $this->diskUriType === 1) {
+            $uri  = '/adm/getmain.php?fun=smart';
+            $uri .= '&diskno=' . $diskNo;
+            $uri .= '&trayno=' . $trayNo;
+            $uriList[] = $uri;
+        }
+
+        if (!isset($this->diskUriType) || $this->diskUriType === 2) {
+            $letter = chr($trayNo + 96);
+            $uri  = '/adm/getmain.php?fun=smart';
+            $uri .= '&diskno=' . $letter;
+            $uri .= '&trayno=' . $trayNo;
+            $uriList[] = $uri;
+        }
 
         $responses = $this->jsonTryMultipleRequests($uriList, null, true, true);
-        // Sadly, both uri's could return json, but possibly without valid data
+        // Sadly, all uri's could return json, but possibly without valid data
         // Find a valid response
-        foreach ($responses as $response) {
-            if (isset($response->model) && ($response->model != 'N/A')) {
+        foreach ($responses as $i=>$response) {
+            if (isset($response->model) && ($response->model != 'N/A' && $response->tray_no != '')) {
+                if (!isset($this->diskUriType) || empty($this->diskUriType)) {
+                    // remember this URI type for further smart checks, reduces the number of requests massively on larger storages
+                    $this->diskUriType = $i;
+                }
                 return $response;
             }
         }

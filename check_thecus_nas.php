@@ -1182,30 +1182,6 @@ class ThecusChecker
         $this->addStatusInfo($statusCode, $statusText, $perfData);
     }
 
-    /**
-     * Checks the CPU usage
-     */
-    protected function new_checkCpuUsage()
-    {
-        $crit = $this->getCpuUsageThreshold(self::STATUS_CRITICAL);
-        $warn = $this->getCpuUsageThreshold(self::STATUS_WARNING);
-        $sysInfo = $this->getSysStatus();
-        $sysArray = $sysInfo->series;
-        $cpuUsage = $sysArray->CPU;
-        if (null !== $crit && $cpuUsage >= $crit) {
-            $statusCode = self::STATUS_CRITICAL;
-        } else if ((null !== $warn) && ($cpuUsage >= $warn)) {
-            $statusCode = self::STATUS_WARNING;
-        } else {
-            $statusCode = self::STATUS_OK;
-        }
-
-        $statusText = 'CPU usage: ' . $cpuUsage . '%';
-        $perfData = 'CPU=' . $cpuUsage . ';' . $warn . ';' . $crit . ';0;100';
-
-        $this->addStatusInfo($statusCode, $statusText, $perfData);
-    }
-
     protected function checkMemoryUsage()
     {
         if ($this->debug) {

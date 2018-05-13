@@ -1,7 +1,7 @@
 ## Model info
 
-* Model: Thecus N5500
-* Firmware: 5.00.04
+* Model: Thecus N????
+* Firmware: ?
 
 ## JSON Output
 
@@ -16,14 +16,13 @@ Response:
     "fan": "on",
     "ups": "none",
     "temp": "none",
-    "log": "      2\n",
+    "log": "      6\n",
     "news": 0,
     "tree": false,
     "modup": {
+        "mod_win": "0",
         "mod_form": "",
-        "modupgrade_enabled": null,
-        "mod_upgrade": "0",
-        "mod_data": null
+        "mod_data": ""
     }
 }
 ```
@@ -31,29 +30,30 @@ Response:
 ### Function getSysStatus()
 Used in checks: health, cpu
 Request uri: /adm/getmain.php?fun=systatus&update=1
-Response:
 ```
 {
-    "cpu_loading": 9,
+    "cpu_loading": 6,
     "cpu_fan": "OK",
     "sys_fan_speed": "OK",
     "sys_fan_speed2": null,
     "sys_fan_speed3": null,
     "sys_fan_speed4": null,
     "pw_status": null,
-    "up_time": "88 days 15 hours 45 minutes",
-    "afp_status": "< div class=\"x-stop-text\"> Stopped<\/div>",
-    "nfs_status": "< div class=\"x-stop-text\"> Stopped<\/div>",
-    "smb_status": "< div class=\"x-run-text\"> Running<\/div>",
-    "ftp_status": "< div class=\"x-run-text\"> Running<\/div>",
-    "tftp_status": "< div class=\"x-stop-text\"> Stopped<\/div>",
+    "up_time": "35 Days 16 Hours 8 Minutes",
+    "afp_status": "<div class=\"x-stop-text\"> Stopped<\/div>",
+    "nfs_status": "<div class=\"x-run-text\"> Running<\/div>",
+    "smb_status": "<div class=\"x-run-text\"> Running<\/div>",
+    "ftp_status": "<div class=\"x-run-text\"> Running<\/div>",
+    "tftp_status": "<div class=\"x-stop-text\"> Stopped<\/div>",
     "sys_netware": "0",
-    "mserver_status": "< div class=\"x-stop-text\"> Stopped<\/div>",
-    "nsysc_status": "< div class=\"x-run-text\"> Running<\/div>",
-    "upnp_status": "< div class=\"x-stop-text\"> Stopped<\/div>",
-    "snmp_status": "< div class=\"x-run-text\"> Running<\/div>"
+    "mserver_status": null,
+    "nsysc_status": "",
+    "upnp_status": "<div class=\"x-run-text\"> Running<\/div>",
+    "snmp_status": "<div class=\"x-run-text\"> Running<\/div>",
+    "fan_full_speed": null
 }
 ```
+
 
 ## Function getRaidAccessStatus()
 Used in checks: health
@@ -61,20 +61,11 @@ Request uri: /adm/getmain.php?fun=raid&action=getAccessStatus
 Response:
 ```
 {
-    "status_dir": [
-        "raid0"
-    ],
-    "dir_num": [
-        "0"
-    ],
-    "div_value": null,
-    "flag": 1,
-    "status": "Healthy",
-    "edit": 0,
-    "reload": 0,
-    "res": null,
-    "total_raid_limit": "3",
-    "create_btn": "0"
+    "div_value": "",
+    "edit": 1,
+    "create": false,
+    "reload": false,
+    "total_raid_limit": "3"
 }
 ```
 
@@ -88,16 +79,17 @@ Response:
         {
             "md_num": "1",
             "master": "*",
-            "raid_id": "RAID5",
-            "raid_level": "5",
+            "raid_id": "RAID",
+            "raid_level": "6",
+            "raid_fs": "EXT4",
             "raid_status": "Healthy",
             "raid_disk": "1,2,3,4,5",
-            "total_capacity": "3718.5 GB",
-            "data_capacity": "2487.3 GB \/ 3421 GB",
-            "usb_capacity": "N\/A",
+            "total_capacity": "5583.1 GB",
+            "data_capacity": "1623.4 GB\/5180.3 GB",
+            "usb_capacity": null,
             "iscsi_capacity": "N\/A",
-            "data_partition": 3532.6,
-            "unused": 185.88,
+            "data_partition": 5527,
+            "unused": 56.08,
             "encrypt": ""
         }
     ]
@@ -113,9 +105,9 @@ Response:
     "disk_data": [
         {
             "trayno": 1,
-            "capacity": "953,870",
-            "model": " WDC WD1001FALS-0",
-            "fireware": " 05.0",
+            "capacity": "2,861,588",
+            "model": " ST3000DM001-9YN1",
+            "fireware": " CC4B",
             "s_status": "Detected",
             "b_status": "Click to start",
             "badblock": "0",
@@ -125,9 +117,9 @@ Response:
         },
         {
             "trayno": 2,
-            "capacity": "953,870",
-            "model": " WDC WD1001FALS-0",
-            "fireware": " 05.0",
+            "capacity": "1,907,729",
+            "model": " ST2000DL003-9VT1",
+            "fireware": " CC32",
             "s_status": "Detected",
             "b_status": "Click to start",
             "badblock": "0",
@@ -137,9 +129,9 @@ Response:
         },
         {
             "trayno": 3,
-            "capacity": "953,870",
-            "model": " WDC WD1001FALS-0",
-            "fireware": " 05.0",
+            "capacity": "1,907,729",
+            "model": " ST2000DL003-9VT1",
+            "fireware": " CC32",
             "s_status": "Detected",
             "b_status": "Click to start",
             "badblock": "0",
@@ -149,9 +141,9 @@ Response:
         },
         {
             "trayno": 4,
-            "capacity": "953,870",
-            "model": " WDC WD1001FALS-0",
-            "fireware": " 05.0",
+            "capacity": "1,907,729",
+            "model": " ST2000DM001-1CH1",
+            "fireware": " CC27",
             "s_status": "Detected",
             "b_status": "Click to start",
             "badblock": "0",
@@ -161,9 +153,9 @@ Response:
         },
         {
             "trayno": 5,
-            "capacity": "953,870",
-            "model": " WDC WD1001FALS-0",
-            "fireware": " 05.0",
+            "capacity": "1,907,729",
+            "model": " Hitachi HUA72302",
+            "fireware": " MK7O",
             "s_status": "Detected",
             "b_status": "Click to start",
             "badblock": "0",
@@ -176,7 +168,7 @@ Response:
     "usb_data": [],
     "edisk_count": 0,
     "usb_count": 0,
-    "disk_total_capacity": "4769350 (MB)"
+    "disk_total_capacity": "10492504 (MB)"
 }
 ```
 
@@ -187,9 +179,9 @@ Response:
 ```
 {
     "tray_no": "",
-    "model": "WDC WD1001FALS-0",
-    "ATTR9": "67807 Hours",
-    "ATTR194": "46",
+    "model": "ST3000DM001-9YN1",
+    "ATTR9": "10169 Hours",
+    "ATTR194": "41",
     "ATTR5": "0",
     "ATTR197": "0",
     "smart_result": "Click to start",
@@ -207,9 +199,9 @@ Response:
 ```
 {
     "tray_no": "1",
-    "model": "WDC WD1001FALS-0",
-    "ATTR9": "67807 Hours",
-    "ATTR194": "46",
+    "model": "ST3000DM001-9YN1",
+    "ATTR9": "10169 Hours",
+    "ATTR194": "41",
     "ATTR5": "0",
     "ATTR197": "0",
     "smart_result": "Click to start",

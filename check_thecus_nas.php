@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /*
- * Copyright (C) 2015 Maarten Hoogveld
+ * Copyright (C) 2018 Maarten Hoogveld
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
  * Created for and tested on a Thecus NAS N5500, firmware V5.00.04
  *
  * @author Maarten Hoogveld <maarten@hoogveld.org> / <m.hoogveld@elevate.nl>
- * @date 2015-07-17
+ * @date 2018-05-13
  *
  */
 
@@ -1099,12 +1099,10 @@ class ThecusChecker
         foreach ($diskInfo->disk_data as $disk) {
             if (isset($disk->disks)) {
                 foreach ($disk->disks as $d) {
-                    if (!isset($diskList[$d->tray_no])) {
-                        $diskList[$d->tray_no][$d->disk_no] = $d;
-                    }
+                    $this->addDiskInfo($diskList, $d);
                 }
-            } else if (!isset($diskList[$disk->trayno])) {
-                $diskList[$disk->trayno][$disk->diskno] = $disk;
+            } else {
+                $this->addDiskInfo($diskList, $disk);
             }
         }
 
@@ -1114,37 +1112,73 @@ class ThecusChecker
                 // Find the disk status
                 if (isset($disk->s_status)) {
                     $diskStatus = $disk->s_status;
+                } else if (isset($disk->status->state)) {
+                    $diskStatus = $disk->status->state;
                 } else {
-                    if (isset($disk->status->state)) {
-                        $diskStatus = $disk->status->state;
-                    } else {
-                        $diskStatus = 'Unknown';
-                    }
+                    $diskStatus = 'Unknown';
                 }
 
                 if ('N/A' === $diskStatus) {
                     continue;
-                } else {
-                    if (('Critical' === $diskStatus) || ('2' === $diskStatus) || (2 === $diskStatus)) {
-                        $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->tray_no . ': ' . $disk->s_status;
-                        $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
-                    } else {
-                        if (('Warning' === $diskStatus) || ('1' === $diskStatus) || (1 === $diskStatus)) {
-                            $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
-                            $this->addStatusInfo(
-                                max(self::STATUS_WARNING, $smartInfo['statusCode']),
-                                $smartInfo['statusText'],
-                                $smartInfo['perfData']
-                            );
-                        } else if (('OK' === $diskStatus) || ('Detected' === $diskStatus) || ('0' === $diskStatus) || (0 === $diskStatus)) {
-                            // The cases 'OK', 'Detected', '0' (and possibly more?)
-                            $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
-                            $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
-                        }
-                    }
+                }
+
+                if (('Critical' === $diskStatus) || ('2' === $diskStatus) || (2 === $diskStatus)) {
+                    $statusText = 'Status of disk nr ' . $diskNr . ' in tray ' . $disk->tray_no . ': ' . $disk->s_status;
+                    $this->addStatusInfo(self::STATUS_CRITICAL, $statusText);
+                } else if (('Warning' === $diskStatus) || ('1' === $diskStatus) || (1 === $diskStatus)) {
+                    $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
+                    $this->addStatusInfo(
+                        max(self::STATUS_WARNING, $smartInfo['statusCode']),
+                        $smartInfo['statusText'],
+                        $smartInfo['perfData']
+                    );
+                } else if (('OK' === $diskStatus) || ('Detected' === $diskStatus) || ('0' === $diskStatus) || (0 === $diskStatus)) {
+                    // The cases 'OK', 'Detected', '0' (and possibly more?)
+                    $smartInfo = $this->checkSmartInfo($diskNr, $trayNr);
+                    $this->addStatusInfo($smartInfo['statusCode'], $smartInfo['statusText'], $smartInfo['perfData']);
                 }
             }
         }
+    }
+
+    /**
+     * Add a disk-info object to the list of disks to check by tray-number and disk-number
+     * @param $diskInfoList
+     * @param $diskInfo
+     */
+    protected function addDiskInfo($diskInfoList, $diskInfo) {
+        if (!is_array($diskInfoList)) {
+            return;
+        }
+
+        // Look for the tray-number, which can be specified by "tray_no" of "trayno"
+        if (isset($diskInfo->tray_no)) {
+            $trayNo = $diskInfo->tray_no;
+        } else if (isset($diskInfo->trayno)) {
+            $trayNo = $diskInfo->trayno;
+        } else {
+            if ($this->debug) {
+                print("Trying to add diskInfo without trayNo set." . PHP_EOL . "Full diskInfo:" . PHP_EOL);
+                print_r($diskInfo);
+            }
+            return;
+        }
+
+        // Look for the disk-number, which can be specified as "disk_no" or "diskno"
+        if (isset($diskInfo->disk_no)) {
+            $diskNo = $diskInfo->disk_no;
+        } else if (isset($diskInfo->diskno)) {
+            $diskNo = $diskInfo->diskno;
+        } else {
+            if ($this->debug) {
+                print("Trying to add diskInfo without diskNo set." . PHP_EOL . "Full diskInfo:" . PHP_EOL);
+                print_r($diskInfo);
+            }
+            return;
+        }
+
+        // Add the disk info definition the the disk-list array
+        $diskInfoList[$trayNo][$diskNo] = $diskInfo;
     }
 
     /**
@@ -1298,6 +1332,7 @@ class ThecusChecker
 
         throw new ThecusException('Needs to be implemented');
 
+        /*
         $statusCode = self::STATUS_OK;
 
         $crit = $this->getUptimeThreshold(self::STATUS_CRITICAL);
@@ -1321,6 +1356,7 @@ class ThecusChecker
         $statusText = $parsedUptime;
 
         $this->addStatusInfo($statusCode, $statusText);
+        */
     }
 
     /**
@@ -1484,32 +1520,35 @@ class ThecusChecker
             $uri = '/adm/getmain.php?fun=smart';
             $uri .= '&disk_no=' . $diskNo;
             $uri .= '&tray_no=' . $trayNo;
-            $uriList[] = $uri;
+            $uriList['uriType_disk_no'] = $uri;
         }
 
         if (!isset($this->diskUriType) || $this->diskUriType === 1) {
             $uri = '/adm/getmain.php?fun=smart';
             $uri .= '&diskno=' . $diskNo;
             $uri .= '&trayno=' . $trayNo;
-            $uriList[] = $uri;
+            $uriList['uriType_diskno'] = $uri;
         }
 
         if (!isset($this->diskUriType) || $this->diskUriType === 2) {
-            $letter = chr($trayNo + 96);
-            $uri = '/adm/getmain.php?fun=smart';
-            $uri .= '&diskno=' . $letter;
-            $uri .= '&trayno=' . $trayNo;
-            $uriList[] = $uri;
+            if (intval($trayNo) > 0) {
+                // Transform '1' into 'a', '2' into 'b', etc
+                $letter = chr(intval($trayNo) + 96);
+                $uri = '/adm/getmain.php?fun=smart';
+                $uri .= '&diskno=' . $letter;
+                $uri .= '&trayno=' . $trayNo;
+                $uriList['uriType_diskno_letter'] = $uri;
+            }
         }
 
         $responses = $this->jsonTryMultipleRequests($uriList, null, true, true);
-        // Sadly, all uri's could return json, but possibly without valid data
+        // Sadly, all uri's might return json, but possibly with invalid data
         // Find a valid response
-        foreach ($responses as $i => $response) {
+        foreach ($responses as $typeKey => $response) {
             if (isset($response->model) && ($response->model != 'N/A' && $response->tray_no != '')) {
                 if (!isset($this->diskUriType) || empty($this->diskUriType)) {
-                    // remember this URI type for further smart checks, reduces the number of requests massively on larger storages
-                    $this->diskUriType = $i;
+                    // Remember this URI type for further smart checks, reduces the number of requests massively on larger storages
+                    $this->diskUriType = $typeKey;
                 }
                 return $response;
             }

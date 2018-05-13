@@ -79,6 +79,9 @@ class ThecusChecker
     /** @var bool */
     protected $debug = false;
 
+    /** @var bool */
+    protected $asciiOnly = false;
+
     /** @var string */
     protected $hostname;
 
@@ -723,6 +726,7 @@ class ThecusChecker
             'help',
             'verbose',
             'version',
+            'ascii-only',
             'debug',
             'config-file:',
             'hostname:',
@@ -761,6 +765,10 @@ class ThecusChecker
 
         if (isset($opts['d']) || isset($opts['debug'])) {
             $this->debug = true;
+        }
+
+        if (isset($opts['ascii-only']) || isset($opts['ascii-only'])) {
+            $this->asciiOnly = true;
         }
 
         if (isset($opts['c'])) {
@@ -897,7 +905,9 @@ class ThecusChecker
         echo '       --ignore-bad-sectors   Ignore bad sectors until the given amount (default: 0)' . PHP_EOL;
         echo '       --ignore-smart-status  One might want to ignore smart status (default: false)' . PHP_EOL;
         echo '   -h, --help                 Display this help and exit' . PHP_EOL;
+        echo '       --ascii-only           Only use ascii characters in Nagios output' . PHP_EOL;
         echo '   -v, --verbose              Display extra information, useful for debugging' . PHP_EOL;
+        echo '       --debug                Display detailed information useful for debugging' . PHP_EOL;
         echo '       --version              Display version information and exit' . PHP_EOL;
         echo PHP_EOL;
         echo 'Usage example:' . PHP_EOL;
@@ -996,15 +1006,15 @@ class ThecusChecker
             }
             if (isset($sysInfo->serie->CPU_TEMP)) {
                 $cpuTemp = $sysInfo->serie->CPU_TEMP;
-                $this->addStatusInfo(self::STATUS_OK, "CPU temp: " . $cpuTemp . "°C", "CPU_temp=" . $cpuTemp);
+                $this->addStatusInfo(self::STATUS_OK, "CPU temp: " . $cpuTemp . ($this->asciiOnly ? "C" : "°C"), "CPU_temp=" . $cpuTemp);
             }
             if (isset($sysInfo->serie->SAS_TEMP)) {
                 $sasTemp = $sysInfo->serie->SAS_TEMP;
-                $this->addStatusInfo(self::STATUS_OK, "SAS temp: " . $sasTemp . "°C", "SAS_temp=" . $sasTemp);
+                $this->addStatusInfo(self::STATUS_OK, "SAS temp: " . $sasTemp . ($this->asciiOnly ? "C" : "°C"), "SAS_temp=" . $sasTemp);
             }
             if (isset($sysInfo->serie->SYS_TEMP)) {
                 $sysTemp = $sysInfo->serie->SYS_TEMP;
-                $this->addStatusInfo(self::STATUS_OK, "Sys temp: " . $sysTemp . "°C", "Sys_temp=" . $sysTemp);
+                $this->addStatusInfo(self::STATUS_OK, "Sys temp: " . $sysTemp . ($this->asciiOnly ? "C" : "°C"), "Sys_temp=" . $sysTemp);
             }
         }
     }
@@ -1360,10 +1370,10 @@ class ThecusChecker
             $warn = $this->getDiskTempThreshold(self::STATUS_WARNING);
             if (null !== $crit && $diskTemp >= $crit) {
                 $statusCode = self::STATUS_CRITICAL;
-                $statusTexts[] = 'Temp: ' . $diskTemp . '°C';
+                $statusTexts[] = 'Temp: ' . $diskTemp . ($this->asciiOnly ? 'C' : '°C');
             } else if (null !== $warn && $diskTemp >= $warn) {
                 $statusCode = max(self::STATUS_WARNING, $statusCode);
-                $statusTexts[] = 'Temp: ' . $diskTemp . '°C';
+                $statusTexts[] = 'Temp: ' . $diskTemp . ($this->asciiOnly ? 'C' : '°C');
             }
             $perfData[] = 'Disk_' . $trayNr . '_' . $diskNr . '_temp=' . $diskTemp . ';' . $warn . ';' . $crit;
         }

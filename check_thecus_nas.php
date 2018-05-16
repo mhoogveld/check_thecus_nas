@@ -23,8 +23,13 @@
  * Created for and tested on a Thecus NAS N5500, firmware V5.00.04
  *
  * @author Maarten Hoogveld <maarten@hoogveld.org> / <m.hoogveld@elevate.nl>
- * @date 2018-05-13
+ * @date 2018-05-16
  *
+ * Version 1.0, 2015-07-28
+ *   Initial version
+ * Version 2.0, 2018-05-16
+ *   Added support for various new Thecus NAS models with support by Daniel Rauer and Chris
+ *   Added memory check
  */
 
 $thecus = new ThecusChecker();
@@ -754,7 +759,7 @@ class ThecusChecker
 
         if (isset($opts['version'])) {
             echo $baseFilename . ' version ' . self::VERSION . PHP_EOL;
-            echo 'Copyright (C) 2017 Maarten Hoogveld.' . PHP_EOL;
+            echo 'Copyright (C) 2018 Maarten Hoogveld.' . PHP_EOL;
             echo 'License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.' . PHP_EOL;
             echo 'This is free software: you are free to change and redistribute it.' . PHP_EOL;
             echo 'There is NO WARRANTY, to the extent permitted by law.' . PHP_EOL;
@@ -976,11 +981,8 @@ class ThecusChecker
             if (isset($sysInfo->sys_fan_speed) && 'OK' != $sysInfo->sys_fan_speed) {
                 $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan 1 not OK');
             }
-            if (isset($sysInfo->sys_fan_speed1) && 'OK' != $sysInfo->sys_fan_speed1) {
-                $this->addStatusInfo(self::STATUS_CRITICAL, 'System fan 1 not OK');
-            }
 
-            $fanNr = 2;
+            $fanNr = 1;
             $fanName = 'sys_fan_speed' . $fanNr;
             while (isset($sysInfo->$fanName)) {
                 if ('OK' != $sysInfo->$fanName) {

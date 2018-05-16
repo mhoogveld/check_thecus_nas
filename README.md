@@ -2,12 +2,16 @@
 Monitoring plugin for Thecus NAS devices
 
 ## Overview
-This plugin can check the health and status of a Thecus NAS device. It has been developed and tested 
+This plugin can check the health and status of a Thecus NAS device by querying the Web UI (User Interface) of
+the NAS. It has been developed and tested 
 against 
-- Thecus N5500 running firmware V5.00.04
-- Thecus N5200XXX running firmware V5.03.02
-- Thecus N2520 running firmware OS6.build_341
-- Thecus N8800PROv2 running firmware V2.05.08.v2
+- Thecus N5500           (firmware V5.00.04)
+- Thecus N5200XXX        (firmware V5.03.02)
+- Thecus N2520 running   (firmware OS6.build_341)
+- Thecus N8800PROv2      (firmware V2.05.08.v2)
+- NASBOX5G2
+- NAS models with similar Web UI's
+
 It can check and report CPU usage, system- and CPU-fans, RAID status, available disk space, disk health (bad-sectors) 
 and disk temperature.
 
@@ -21,11 +25,18 @@ guaranteed to be the same between different Thecus models and even firmware vers
 model. This is however the only way to extract extra information like raid-status, drive temperatures
 and failures.
 
+## Changelog
+* **v1.0 - 2015-07-28:**
+  Initial version
+* **v2.0 - 2018-05-16:**
+  Added support for various new Thecus NAS models with support by Daniel Rauer and Chris
+  Added memory check
+
 ## Installation
 Requirements:
 * PHP version 5.3 or 7.x (earlier versions are untested)
-* php5_curl or php7x_curl
-    For Debian based systems (e.g. Ubuntu): `sudo apt-get install php5-curl`
+* php5_curl or php_curl
+    For Debian based systems (e.g. Ubuntu): `sudo apt-get install php-curl`
 
 Place the check script anywhere you'd like (eg /usr/local/lib/nagios/plugins) and run it
 
@@ -33,7 +44,7 @@ Place the check script anywhere you'd like (eg /usr/local/lib/nagios/plugins) an
 For a complete overview run the check with the parameter "--help".
 For security reasons, it's a good idea to store the password in a config file instead of specifying 
 the password as a parameter on the command line. Every user, that can log on to the machine, can see 
-all running processes with arguments (which would include the password.) By using a config file, you
+all running processes with arguments (which would include the password). By using a config file, you
 will not suffer from this issue.
 
 General use cases:
@@ -143,3 +154,21 @@ define service {
 ```
 
 
+## Support for other Thecus NAS models
+
+If you have a Thecus NAS (or a NAS similar to a Thecus) and this check does not work as expected, 
+the URIs and/or returned JSON might not match what the supported models use. 
+Your model might require calling different URIs or returns the data in a different JSON structure.
+To see what data is returned in JSON format by the currently configured URIs, run the script 
+with the `--debug` parameter for each check type (health, cpu, memory and disk-usage). The returned JSON
+can then be matched against the php code and necessary changes can be made to add support.
+To see what URIs should be used, in the case that no or not enough information is returned, 
+you can use a webbrowser and log in to your NAS. Use the network monitoring part of the browsers developer tools 
+to see what the Web UI uses by browsing to the pages where this information is displayed. 
+In Firefox use F12, in Chrome use Ctrl-Shift-i.
+
+Please feel free to make any improvements to this script and send me a pull request. In case of support for 
+a new model, please create a file with model specific output, like the ones in the model-output directory.
+These files are base on the output of the check when run with the `--debug` parameter.
+If you would like support for a model, but you don't know how to add it, you could try to send me the output 
+as mentioned above and I might be able to add support that way.

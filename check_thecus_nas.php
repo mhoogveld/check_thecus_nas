@@ -1101,10 +1101,10 @@ class ThecusChecker
         foreach ($diskInfo->disk_data as $disk) {
             if (isset($disk->disks)) {
                 foreach ($disk->disks as $d) {
-                    $this->addDiskInfo($diskList, $d);
+                    $diskList = $this->addDiskInfo($diskList, $d);
                 }
             } else {
-                $this->addDiskInfo($diskList, $disk);
+                $diskList = $this->addDiskInfo($diskList, $disk);
             }
         }
 
@@ -1147,6 +1147,7 @@ class ThecusChecker
      * Add a disk-info object to the list of disks to check by tray-number and disk-number
      * @param $diskInfoList
      * @param $diskInfo
+     * @return array Returns an array containing the current disk list
      */
     protected function addDiskInfo($diskInfoList, $diskInfo) {
         if (!is_array($diskInfoList)) {
@@ -1181,6 +1182,8 @@ class ThecusChecker
 
         // Add the disk info definition the the disk-list array
         $diskInfoList[$trayNo][$diskNo] = $diskInfo;
+
+        return $diskInfoList;
     }
 
     /**

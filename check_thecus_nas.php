@@ -1032,14 +1032,13 @@ class ThecusChecker
         }
 
         $statusTexts = array();
-
         // Check RAID access status
         $raidAccessStatus = $this->getRaidAccessStatus();
         if (isset($raidAccessStatus->status)) {
             // N5200XXXX does not return RAID access status
             if ('Damaged' == $raidAccessStatus->status) {
                 $statusCode = self::STATUS_CRITICAL;
-            } else if ('Degraded' == $raidAccessStatus->status) {
+            } else if (('Degraded' == $raidAccessStatus->status) || (strpos($raidAccessStatus->status, "Recovering: ") === 0)) {
                 $statusCode = self::STATUS_WARNING;
             } else if ('Healthy' == $raidAccessStatus->status) {
                 $statusCode = self::STATUS_OK;
@@ -1060,7 +1059,7 @@ class ThecusChecker
         foreach ($raidList->raid_list as $raid) {
             if ('Damaged' == $raid->raid_status) {
                 $statusCode = self::STATUS_CRITICAL;
-            } else if ('Degraded' == $raid->raid_status) {
+            } else if (('Degraded' == $raid->raid_status) || (strpos($raid->raid_status, "Recovering: ") === 0)) {
                 $statusCode = self::STATUS_WARNING;
             } else if ('Healthy' == $raid->raid_status) {
                 $statusCode = self::STATUS_OK;

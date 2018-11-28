@@ -1059,7 +1059,7 @@ class ThecusChecker
         foreach ($raidList->raid_list as $raid) {
             if ('Damaged' == $raid->raid_status) {
                 $statusCode = self::STATUS_CRITICAL;
-            } else if (('Degraded' == $raid->raid_status) || (strpos($raidAccessStatus->status, "Recovering: ") === 0)) {
+            } else if (('Degraded' == $raid->raid_status) || (strpos($raid->raid_status, "Recovering: ") === 0)) {
                 $statusCode = self::STATUS_WARNING;
             } else if ('Healthy' == $raid->raid_status) {
                 $statusCode = self::STATUS_OK;

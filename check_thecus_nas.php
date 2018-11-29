@@ -82,7 +82,7 @@ class ThecusChecker
     const DEFAULT_UPTIME_CRIT = 300;
 
     /** @var bool */
-    protected $debug = false;
+    protected $debug = true;
 
     /** @var bool */
     protected $asciiOnly = false;
@@ -849,6 +849,7 @@ class ThecusChecker
         if (isset($opts['disk-temp-critical'])) {
             $this->setDiskTempThreshold(ThecusChecker::STATUS_CRITICAL, intval($opts['disk-temp-critical']));
         }
+
         if (isset($opts['ignore-bad-sectors'])) {
             $this->setIgnoreBadSectors($opts['ignore-bad-sectors']);
         }

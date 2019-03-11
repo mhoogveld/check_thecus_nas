@@ -1064,6 +1064,9 @@ class ThecusChecker
                 $statusCode = self::STATUS_WARNING;
             } else if ('Healthy' == $raid->raid_status) {
                 $statusCode = self::STATUS_OK;
+            } else if (strpos($raid->raid_status, 'Build') === 0) {
+                // RAID on 5200XXX is rebuilding
+                $statusCode = self::STATUS_WARNING;
             } else {
                 $statusCode = self::STATUS_UNKNOWN;
             }

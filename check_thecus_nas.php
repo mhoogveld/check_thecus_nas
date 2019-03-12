@@ -118,6 +118,9 @@ class ThecusChecker
     protected $ignoreBadSectors;
 
     /** @var string */
+    protected $ignorePendingSectors;
+
+    /** @var string */
     protected $ignoreSmartStatus;
 
     /** @var array  An (internally used) array of threshold types and values */
@@ -304,6 +307,29 @@ class ThecusChecker
     {
         $this->ignoreBadSectors = $ignoreBadSectors;
         return $this;
+    }
+
+    /**
+     * @param string $ignorePendingSectors
+     *
+     * @return self
+     */
+    public function setIgnorePendingSectors($ignorePendingSectors)
+    {
+        $this->ignorePendingSectors = $ignorePendingSectors;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIgnorePendingSectors()
+    {
+        if (isset($this->ignorePendingSectors)) {
+            return $this->ignorePendingSectors;
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -747,6 +773,7 @@ class ThecusChecker
             'disk-temp-warning:',
             'disk-temp-critical:',
             'ignore-bad-sectors:',
+            'ignore-pending-sectors:',
             'ignore-smart-status:',
         );
 
@@ -853,6 +880,9 @@ class ThecusChecker
         if (isset($opts['ignore-bad-sectors'])) {
             $this->setIgnoreBadSectors($opts['ignore-bad-sectors']);
         }
+        if (isset($opts['ignore-pending-sectors'])) {
+            $this->setIgnorePendingSectors($opts['ignore-pending-sectors']);
+        }
         if (isset($opts['ignore-smart-status'])) {
             $this->setIgnoreSmartStatus($opts['ignore-smart-status']);
         }
@@ -909,6 +939,7 @@ class ThecusChecker
         echo '       --disk-temp-warning    Disk temperature warning level in °C (default: 50)' . PHP_EOL;
         echo '       --disk-temp-critical   Disk temperature critical level in °C (default: 60)' . PHP_EOL;
         echo '       --ignore-bad-sectors   Ignore bad sectors until the given amount (default: 0)' . PHP_EOL;
+        echo '       --ignore-pending-sectors   Ignore pending sectors until the given amount (default: 0)' . PHP_EOL;
         echo '       --ignore-smart-status  One might want to ignore smart status (default: false)' . PHP_EOL;
         echo '   -h, --help                 Display this help and exit' . PHP_EOL;
         echo '       --ascii-only           Only use ascii characters in Nagios output' . PHP_EOL;
@@ -1424,14 +1455,16 @@ class ThecusChecker
 
         if (isset($smartInfo->ATTR197)) {
             $curPendingSectorCount = intval($smartInfo->ATTR197);
-            $crit = $this->getCurPendingSectThreshold(self::STATUS_CRITICAL);
-            $warn = $this->getCurPendingSectThreshold(self::STATUS_WARNING);
-            if (null !== $crit && $curPendingSectorCount >= $crit) {
-                $statusCode = self::STATUS_CRITICAL;
-                $statusTexts[] = 'Unstable sector count: ' . $curPendingSectorCount;
-            } else if (null !== $warn && $curPendingSectorCount >= $warn) {
-                $statusCode = max(self::STATUS_WARNING, $statusCode);
-                $statusTexts[] = 'Unstable sector count: ' . $curPendingSectorCount;
+            if ($curPendingSectorCount > $this->getIgnorePendingSectors()) {
+                $crit = $this->getCurPendingSectThreshold(self::STATUS_CRITICAL);
+                $warn = $this->getCurPendingSectThreshold(self::STATUS_WARNING);
+                if (null !== $crit && $curPendingSectorCount >= $crit) {
+                    $statusCode = self::STATUS_CRITICAL;
+                    $statusTexts[] = 'Unstable sector count: ' . $curPendingSectorCount;
+                } else if (null !== $warn && $curPendingSectorCount >= $warn) {
+                    $statusCode = max(self::STATUS_WARNING, $statusCode);
+                    $statusTexts[] = 'Unstable sector count: ' . $curPendingSectorCount;
+                }
             }
         }
 

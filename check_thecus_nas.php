@@ -30,6 +30,9 @@
  * Version 2.0, 2018-05-16
  *   Added support for various new Thecus NAS models with support by Daniel Rauer and Chris
  *   Added memory check
+ * Version 2.1, 2019-03-14
+ *   Added support for setting pending sector thresholds (building on code by Daniel Rauer)
+ *   Replaced --ignore-bad-sectors with setting being able to set thresholds for number of bad sectors
  */
 
 $thecus = new ThecusChecker();
@@ -39,7 +42,7 @@ exit($statusCode);
 
 class ThecusChecker
 {
-    const VERSION = '1.0';
+    const VERSION = '2.1';
 
     /** Output constants for as defined by Nagios */
     const STATUS_OK = 0;
@@ -82,7 +85,7 @@ class ThecusChecker
     const DEFAULT_UPTIME_CRIT = 300;
 
     /** @var bool */
-    protected $debug = true;
+    protected $debug = false;
 
     /** @var bool */
     protected $asciiOnly = false;
@@ -746,6 +749,10 @@ class ThecusChecker
             'disk-usage-critical:',
             'disk-temp-warning:',
             'disk-temp-critical:',
+            'bad-sector-warning:',
+            'bad-sector-critical:',
+            'pending-sector-warning:',
+            'pending-sector-critical:',
             'ignore-bad-sectors:',
             'ignore-smart-status:',
         );
@@ -759,7 +766,7 @@ class ThecusChecker
 
         if (isset($opts['version'])) {
             echo $baseFilename . ' version ' . self::VERSION . PHP_EOL;
-            echo 'Copyright (C) 2018 Maarten Hoogveld.' . PHP_EOL;
+            echo 'Copyright (C) 2019 Maarten Hoogveld.' . PHP_EOL;
             echo 'License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.' . PHP_EOL;
             echo 'This is free software: you are free to change and redistribute it.' . PHP_EOL;
             echo 'There is NO WARRANTY, to the extent permitted by law.' . PHP_EOL;
@@ -851,8 +858,22 @@ class ThecusChecker
         }
 
         if (isset($opts['ignore-bad-sectors'])) {
-            $this->setIgnoreBadSectors($opts['ignore-bad-sectors']);
+            $this->setReallocSectThreshold(ThecusChecker::STATUS_WARNING, intval($opts['ignore-bad-sectors']));
         }
+        if (isset($opts['bad-sector-warning'])) {
+            $this->setReallocSectThreshold(ThecusChecker::STATUS_WARNING, intval($opts['bad-sector-warning']));
+        }
+        if (isset($opts['bad-sector-critical'])) {
+            $this->setReallocSectThreshold(ThecusChecker::STATUS_CRITICAL, intval($opts['bad-sector-critical']));
+        }
+
+        if (isset($opts['pending-sector-warning'])) {
+            $this->setCurPendingSectThreshold(ThecusChecker::STATUS_WARNING, intval($opts['pending-sector-warning']));
+        }
+        if (isset($opts['pending-sector-critical'])) {
+            $this->setCurPendingSectThreshold(ThecusChecker::STATUS_CRITICAL, intval($opts['pending-sector-critical']));
+        }
+
         if (isset($opts['ignore-smart-status'])) {
             $this->setIgnoreSmartStatus($opts['ignore-smart-status']);
         }
@@ -908,7 +929,14 @@ class ThecusChecker
         echo '       --disk-usage-critical  Disk usage critical level % (default: 90)' . PHP_EOL;
         echo '       --disk-temp-warning    Disk temperature warning level in °C (default: 50)' . PHP_EOL;
         echo '       --disk-temp-critical   Disk temperature critical level in °C (default: 60)' . PHP_EOL;
-        echo '       --ignore-bad-sectors   Ignore bad sectors until the given amount (default: 0)' . PHP_EOL;
+        echo '       --bad-sector-warning   Disk temperature warning level in °C (default: 50)' . PHP_EOL;
+        echo '       --bad-sector-critical  Disk temperature critical level in °C (default: 60)' . PHP_EOL;
+        echo '       --pending-sector-warning' . PHP_EOL;
+        echo '                              Current pending sectors count warning level (SMART attr 197, default: 1)' . PHP_EOL;
+        echo '       --pending-sector-critical' . PHP_EOL;
+        echo '                              Current pending sectors count critical level (SMART attr 197, default: 1)' . PHP_EOL;
+        echo '       --ignore-bad-sectors   DEPRECATED: Replaced by --bad-sector-warning.' . PHP_EOL;
+        echo '                              Ignore bad sectors until the given amount (default: 0)' . PHP_EOL;
         echo '       --ignore-smart-status  One might want to ignore smart status (default: false)' . PHP_EOL;
         echo '   -h, --help                 Display this help and exit' . PHP_EOL;
         echo '       --ascii-only           Only use ascii characters in Nagios output' . PHP_EOL;
@@ -1395,16 +1423,14 @@ class ThecusChecker
 
         if (isset($smartInfo->ATTR5)) {
             $reallocSectorCount = intval($smartInfo->ATTR5);
-            if ($reallocSectorCount > $this->getIgnoreBadSectors()) {
-                $crit = $this->getReallocSectThreshold(self::STATUS_CRITICAL);
-                $warn = $this->getReallocSectThreshold(self::STATUS_WARNING);
-                if (null !== $crit && $reallocSectorCount >= $crit) {
-                    $statusCode = self::STATUS_CRITICAL;
-                    $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
-                } else if (null !== $warn && $reallocSectorCount >= $warn) {
-                    $statusCode = max(self::STATUS_WARNING, $statusCode);
-                    $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
-                }
+            $crit = $this->getReallocSectThreshold(self::STATUS_CRITICAL);
+            $warn = $this->getReallocSectThreshold(self::STATUS_WARNING);
+            if (null !== $crit && $reallocSectorCount >= $crit) {
+                $statusCode = self::STATUS_CRITICAL;
+                $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
+            } else if (null !== $warn && $reallocSectorCount >= $warn) {
+                $statusCode = max(self::STATUS_WARNING, $statusCode);
+                $statusTexts[] = 'Bad sector count: ' . $reallocSectorCount;
             }
         }
 
